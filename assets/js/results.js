@@ -1,6 +1,9 @@
-// assets/js/results.js
 (async function () {
-  // favorites count in nav
+  // Wait for Favorites to connect to auth + Firestore
+  if (typeof Favorites !== "undefined" && Favorites.waitUntilReady) {
+    await Favorites.waitUntilReady();
+  }
+
   if (typeof Favorites !== "undefined") {
     Favorites.renderFavCount();
   }
@@ -25,9 +28,7 @@
   const emptyStateCard = document.getElementById("empty");
   const listingGrid = document.getElementById("grid");
 
-  const resultsLayout = document.getElementById("resultsLayout");
-
-  // Map panel hidden until click
+  // Map panel
   const mapPanel = document.getElementById("mapPanel");
   const mapSubtitle = document.getElementById("mapSubtitle");
   const closeMapButton = document.getElementById("closeMap");
@@ -46,6 +47,17 @@
     mode = "buy";
   }
   mode = String(mode).toLowerCase();
+
+  // Require login for Sell mode
+  if (mode === "sell") {
+    if (typeof Favorites !== "undefined" && Favorites.isLoggedIn) {
+      if (!Favorites.isLoggedIn()) {
+        const returnTo = encodeURIComponent("results.html?mode=sell");
+        location.href = "login.html?returnTo=" + returnTo;
+        return;
+      }
+    }
+  }
 
   function setActiveNav() {
     const ids = ["navBuy", "navRent", "navSell", "navMortgage"];
@@ -102,13 +114,17 @@
 
     if (mode === "sell") {
       modeTitle.textContent = "Sell directly";
-      modeDesc.textContent = "Start a video consult to discuss pricing, negotiation strategy, and next steps.";
-      modeCallBtn.href = "https://meet.jit.si/" + encodeURIComponent("veritybridge-sell-consult");
+      modeDesc.textContent =
+        "Start a video consult to discuss pricing, negotiation strategy, and next steps.";
+      modeCallBtn.href =
+        "https://meet.jit.si/" + encodeURIComponent("veritybridge-sell-consult");
     }
     else {
       modeTitle.textContent = "Mortgage prep";
-      modeDesc.textContent = "Start a video consult to go over rates, pre-approval, and affordability.";
-      modeCallBtn.href = "https://meet.jit.si/" + encodeURIComponent("veritybridge-mortgage-consult");
+      modeDesc.textContent =
+        "Start a video consult to go over rates, pre-approval, and affordability.";
+      modeCallBtn.href =
+        "https://meet.jit.si/" + encodeURIComponent("veritybridge-mortgage-consult");
     }
   }
 
@@ -188,7 +204,6 @@
     return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
   }
 
-  // Try multiple photos before falling back
   function imageTagWithFallback(urls, alt) {
     const safeAlt = escapeHtml(alt || "Home photo");
 
@@ -212,70 +227,22 @@
       first = placeholderDataUrl("Photo unavailable");
     }
 
-    const data = escapeHtml(JSON.stringify(list));
-
-    return (
-      '\n      <img class="home-img-img"\n' +
-      '           src="' + escapeHtml(first) + '"\n' +
-      '           alt="' + safeAlt + '"\n' +
-      "           data-srcs='" + data + "'\n" +
-      '           data-i="0"\n' +
-      '           loading="lazy"\n' +
-      '           onerror="\n' +
-      "             try {\n" +
-      "               const srcs = JSON.parse(this.getAttribute('data-srcs') || '[]');\n" +
-      "               let i = parseInt(this.getAttribute('data-i') || '0', 10);\n" +
-      "               i++;\n" +
-      "               if (i < srcs.length) {\n" +
-      "                 this.setAttribute('data-i', String(i));\n" +
-      "                 this.src = srcs[i];\n" +
-      "               } else {\n" +
-      "                 this.onerror = null;\n" +
-      "                 this.src = '" + placeholderDataUrl("Photo unavailable") + "';\n" +
-      "               }\n" +
-      "             } catch (e) {\n" +
-      "               this.onerror = null;\n" +
-      "               this.src = '" + placeholderDataUrl("Photo unavailable") + "';\n" +
-      "             }\n" +
-      '           "\n' +
-      "      />\n    "
-    );
+    return '<img src="' + first + '" alt="' + safeAlt + '" loading="lazy" />';
   }
 
-  // Mode routing for your 5 listings
-  const MODE_BY_ID = {
-    "hc-1001": "buy",
-    "hc-1002": "buy",
-    "hc-1003": "sell",
-    "hc-1004": "rent",
-    "hc-1005": "mortgage"
-  };
-
   function listingMode(listing) {
-    let fromJson = "";
+    const raw = String((listing && listing.mode) || "").toLowerCase();
 
-    if (listing && listing.mode) {
-      fromJson = listing.mode;
+    if (raw === "rent") {
+      return "rent";
     }
-    else if (listing && listing.listingMode) {
-      fromJson = listing.listingMode;
+    if (raw === "sell") {
+      return "sell";
     }
-    else if (listing && listing.category) {
-      fromJson = listing.category;
+    if (raw === "mortgage") {
+      return "mortgage";
     }
-
-    fromJson = String(fromJson).toLowerCase();
-
-    if (fromJson) {
-      return fromJson;
-    }
-
-    let mapped = MODE_BY_ID[listing.id];
-    if (!mapped) {
-      mapped = "buy";
-    }
-
-    return mapped;
+    return "buy";
   }
 
   function matchesSearch(listing, q) {
@@ -283,218 +250,148 @@
       return true;
     }
 
-    const parts = [
-      listing.address,
-      listing.city,
-      listing.state,
-      listing.zip,
-      listing.neighborhood,
-      listing.type
-    ];
+    const hay =
+      String(listing.address || "") + " " +
+      String(listing.city || "") + " " +
+      String(listing.state || "") + " " +
+      String(listing.zip || "");
 
-    const hay = parts
-      .filter(function (x) {
-        return Boolean(x);
-      })
-      .join(" ")
-      .toLowerCase();
-
-    return hay.includes(q.toLowerCase());
+    return hay.toLowerCase().includes(String(q).toLowerCase());
   }
 
   function passesNumericFilters(listing) {
-    // Only apply numeric filters in buy/rent
-    if (!(mode === "buy" || mode === "rent")) {
-      return true;
-    }
+    const minPrice = Number(minPriceInput ? minPriceInput.value : 0) || 0;
+    const maxPrice = Number(maxPriceInput ? maxPriceInput.value : 0) || 0;
 
-    let minP = 0;
-    if (minPriceInput) {
-      minP = Number(minPriceInput.value || 0);
-    }
+    const minBeds = Number(minBedsSelect ? minBedsSelect.value : 0) || 0;
+    const typeVal = String(typeSelect ? typeSelect.value : "");
 
-    let maxP = 0;
-    if (maxPriceInput) {
-      maxP = Number(maxPriceInput.value || 0);
-    }
+    const price = Number(listing.price || 0) || 0;
+    const beds = Number(listing.beds || 0) || 0;
 
-    let minB = 0;
-    if (minBedsSelect) {
-      minB = Number(minBedsSelect.value || 0);
-    }
-
-    let type = "";
-    if (typeSelect) {
-      type = String(typeSelect.value || "").trim();
-    }
-
-    if (minP && Number(listing.price || 0) < minP) {
+    if (minPrice && price < minPrice) {
       return false;
     }
-    if (maxP && Number(listing.price || 0) > maxP) {
+
+    if (maxPrice && price > maxPrice) {
       return false;
     }
-    if (minB && Number(listing.beds || 0) < minB) {
+
+    if (minBeds && beds < minBeds) {
       return false;
     }
-    if (type && String(listing.type || "") !== type) {
-      return false;
+
+    if (typeVal) {
+      if (String(listing.type || "") !== typeVal) {
+        return false;
+      }
     }
 
     return true;
   }
 
   function sortListings(list) {
-    let sort = "newest";
-    if (sortSelect) {
-      sort = String(sortSelect.value || "newest").toLowerCase();
-    }
+    const sortVal = String(sortSelect ? sortSelect.value : "newest");
 
-    const arr = list.slice();
+    const copy = list.slice();
 
-    if (sort === "price_low") {
-      arr.sort(function (a, b) {
-        return (a.price || 0) - (b.price || 0);
+    if (sortVal === "price_asc") {
+      copy.sort(function (a, b) {
+        return Number(a.price || 0) - Number(b.price || 0);
       });
     }
-    else if (sort === "price_high") {
-      arr.sort(function (a, b) {
-        return (b.price || 0) - (a.price || 0);
+    else if (sortVal === "price_desc") {
+      copy.sort(function (a, b) {
+        return Number(b.price || 0) - Number(a.price || 0);
       });
     }
-    else if (sort === "beds") {
-      arr.sort(function (a, b) {
-        return (b.beds || 0) - (a.beds || 0);
+    else if (sortVal === "sqft_desc") {
+      copy.sort(function (a, b) {
+        return Number(b.sqft || 0) - Number(a.sqft || 0);
       });
     }
     else {
-      // newest
-      arr.sort(function (a, b) {
-        return (b.createdAt || 0) - (a.createdAt || 0);
-      });
+      // newest: keep file order
     }
 
-    return arr;
-  }
-
-  function jitsiRoomForListing(listingId) {
-    return ("veritybridge-" + listingId).replace(/[^a-zA-Z0-9_-]/g, "");
+    return copy;
   }
 
   function renderListingCard(listing) {
-    const isFav = Favorites.has(listing.id);
-    const alt = listing.address + ", " + listing.city;
+    const id = escapeHtml(listing.id);
+    const title =
+      escapeHtml(listing.address) + ", " +
+      escapeHtml(listing.city) + ", " +
+      escapeHtml(listing.state);
 
-    const detailsLine =
-      listing.beds +
-      " bd • " +
-      listing.baths +
-      " ba • " +
-      formatNumber(listing.sqft) +
-      " sqft • " +
-      escapeHtml(listing.type);
+    const beds = Number(listing.beds || 0) || 0;
+    const baths = Number(listing.baths || 0) || 0;
 
-    const listingHref = "listing.html?id=" + encodeURIComponent(listing.id);
-    const callHref = "https://meet.jit.si/" + encodeURIComponent(jitsiRoomForListing(listing.id));
+    const favOn =
+      (typeof Favorites !== "undefined" && Favorites.has)
+        ? Favorites.has(listing.id)
+        : false;
+
+    const favIcon = favOn ? "❤️" : "♡";
+
+    const img = imageTagWithFallback(listing.photos, title);
 
     return (
-      '\n      <article class="home-card" data-listing-card data-id="' +
-      escapeHtml(listing.id) +
-      '">\n        <a class="home-img" href="' +
-      listingHref +
-      '" aria-label="View listing">\n          ' +
-      imageTagWithFallback(listing.photos || [], alt) +
-      '\n        </a>\n\n        <div class="home-body">\n          <div class="home-row">\n            <div class="home-price">' +
-      formatMoney(listing.price) +
-      '</div>\n            <button class="icon-btn" type="button" data-fav="' +
-      escapeHtml(listing.id) +
-      '" aria-label="Save listing">\n              ' +
-      (isFav ? "❤️" : "♡") +
-      "\n            </button>\n          </div>\n\n          <div class=\"home-facts muted\">" +
-      detailsLine +
-      "</div>\n\n          <a class=\"home-addr\" href=\"" +
-      listingHref +
-      "\">\n            " +
-      escapeHtml(listing.address) +
-      ", " +
-      escapeHtml(listing.city) +
-      ", " +
-      escapeHtml(listing.state) +
-      " " +
-      escapeHtml(listing.zip) +
-      '\n          </a>\n\n          <div class="home-sub muted">' +
-      escapeHtml(listing.neighborhood || "") +
-      '</div>\n\n          <div class="home-tags">\n            <a class="tag tag-btn" href="' +
-      callHref +
-      '" target="_blank" rel="noreferrer">Tour today</a>\n            <a class="tag tag-soft tag-btn" href="' +
-      listingHref +
-      '">Video negotiation</a>\n          </div>\n        </div>\n      </article>\n    '
+      '<div class="card listing-card" data-listing-card="1" data-id="' + id + '">' +
+        '<a class="listing-link" href="listing.html?id=' + encodeURIComponent(listing.id) + '">' +
+          '<div class="listing-img">' + img + "</div>" +
+          '<div class="listing-body">' +
+            '<div class="listing-price">' + formatMoney(listing.price) + "</div>" +
+            '<div class="listing-facts muted">' +
+              beds + " bd • " + baths + " ba • " + formatNumber(listing.sqft) + " sqft" +
+            "</div>" +
+            '<div class="listing-addr">' + title + "</div>" +
+          "</div>" +
+        "</a>" +
+        '<button class="fav-btn" type="button" data-fav="' + id + '" aria-label="Save">' +
+          favIcon +
+        "</button>" +
+      "</div>"
     );
   }
 
-  // ---- Leaflet map logic (hidden until click)
+  // ----- Map -----
   let leafletMap = null;
-  let markerLayer = null;
-
-  function ensureMapInitialized() {
-    if (leafletMap) {
-      return;
-    }
-
-    leafletMap = L.map("leafletMap", { zoomControl: true }).setView([39.5, -98.35], 4);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(leafletMap);
-
-    markerLayer = L.layerGroup().addTo(leafletMap);
-  }
-
-  function openMapPanel() {
-    mapPanel.classList.remove("is-hidden");
-    resultsLayout.classList.add("map-open");
-    ensureMapInitialized();
-    setTimeout(function () {
-      leafletMap.invalidateSize();
-    }, 120);
-  }
+  let marker = null;
 
   function closeMapPanel() {
-    mapPanel.classList.add("is-hidden");
-    resultsLayout.classList.remove("map-open");
+    if (mapPanel) {
+      mapPanel.classList.add("is-hidden");
+    }
   }
 
   function showListingOnMap(listing) {
-    openMapPanel();
-
-    if (!listing || typeof listing.lat !== "number" || typeof listing.lng !== "number") {
-      mapSubtitle.textContent = "No coordinates for this listing yet.";
-      markerLayer.clearLayers();
-      leafletMap.setView([39.5, -98.35], 4);
+    if (!listing || !listing.lat || !listing.lng) {
+      if (mapSubtitle) {
+        mapSubtitle.textContent = "No map coordinates for this listing.";
+      }
       return;
     }
 
-    mapSubtitle.textContent = listing.address + ", " + listing.city;
-    markerLayer.clearLayers();
+    if (!leafletMap) {
+      leafletMap = L.map("leafletMap");
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap"
+      }).addTo(leafletMap);
+    }
 
-    const marker = L.marker([listing.lat, listing.lng]).addTo(markerLayer);
-    marker.bindPopup(
-      '<div style="font-weight:900">' +
-        formatMoney(listing.price) +
-        '</div>' +
-        '<div style="color:#6b7280;font-size:12px">' +
-        listing.beds +
-        " bd • " +
-        listing.baths +
-        " ba • " +
-        formatNumber(listing.sqft) +
-        " sqft" +
-        "</div>" +
-        '<div style="margin-top:6px;font-weight:850">' +
-        escapeHtml(listing.address) +
-        "</div>"
-    );
+    if (marker) {
+      marker.remove();
+      marker = null;
+    }
 
+    if (mapPanel) {
+      mapPanel.classList.remove("is-hidden");
+    }
+
+    marker = L.marker([listing.lat, listing.lng]).addTo(leafletMap);
+    marker.bindPopup(escapeHtml(listing.address || "Listing"));
     leafletMap.setView([listing.lat, listing.lng], 12, { animate: true });
 
     setTimeout(function () {
@@ -502,7 +399,6 @@
     }, 160);
   }
 
-  // Hide map
   if (closeMapButton) {
     closeMapButton.addEventListener("click", closeMapPanel);
   }
@@ -563,16 +459,20 @@
         e.stopPropagation();
 
         const id = favButton.getAttribute("data-fav");
-        Favorites.toggle(id);
 
-        if (Favorites.has(id)) {
-          favButton.textContent = "❤️";
-        }
-        else {
-          favButton.textContent = "♡";
+        if (typeof Favorites !== "undefined") {
+          Favorites.toggle(id);
+
+          if (Favorites.has(id)) {
+            favButton.textContent = "❤️";
+          }
+          else {
+            favButton.textContent = "♡";
+          }
+
+          Favorites.renderFavCount();
         }
 
-        Favorites.renderFavCount();
         return;
       }
 

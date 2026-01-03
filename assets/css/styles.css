@@ -1031,3 +1031,221 @@ a:hover{ text-decoration:none; }
   .card-grid{ grid-template-columns: 1fr; }
   .hero-title{ font-size: 2.15rem; }
 }
+
+/* ============================================================
+   LOGIN PAGE (glassy gradient, readable)
+   Only applies on login.html because it uses <body class="login-page">
+============================================================ */
+
+body.login-page{
+  min-height: 100vh;
+  margin: 0;
+
+  /* bright base + color glows (readable) */
+  background:
+    radial-gradient(1100px 700px at 20% 10%, rgba(255, 203, 95, 0.35), rgba(255, 203, 95, 0) 60%),
+    radial-gradient(900px 650px at 80% 20%, rgba(64, 148, 255, 0.28), rgba(64, 148, 255, 0) 60%),
+    radial-gradient(900px 650px at 60% 90%, rgba(170, 110, 255, 0.22), rgba(170, 110, 255, 0) 60%),
+    #f5f7fb;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+/* your existing HTML uses .login-shell (not .login-wrap) */
+.login-shell{
+  width: min(1000px, 100%);
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px){
+  .login-shell{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* LEFT PANEL (hero) */
+.login-hero{
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-hero::after{
+  content:"";
+  position:absolute;
+  right:-160px;
+  top:-160px;
+  width: 360px;
+  height: 360px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, rgba(11, 99, 246, 0.22), transparent 60%);
+  opacity: .9;
+}
+
+/* Typography in hero */
+.login-hero h1{
+  margin: 0 0 8px;
+  font-size: 2rem;
+  font-weight: 950;
+  letter-spacing: -.03em;
+  color: var(--text);
+}
+
+.login-hero p{
+  margin: 0 0 12px;
+  color: rgba(15, 23, 42, 0.70);
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+/* badges */
+.login-badges{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0 14px;
+}
+
+.login-badge{
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(255, 255, 255, 0.55);
+  color: rgba(15, 23, 42, 0.82);
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-weight: 850;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+/* links row */
+.login-links{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.login-links a{
+  font-weight: 900;
+  color: rgba(15, 23, 42, 0.82);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.login-links a:hover{
+  opacity: .92;
+}
+
+/* RIGHT PANEL (form card) */
+.login-card{
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.12);
+}
+
+/* headings */
+.login-card h2{
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+  font-weight: 950;
+  letter-spacing: -.02em;
+  color: var(--text);
+}
+
+#formSubtitle{
+  color: rgba(15, 23, 42, 0.70);
+  font-weight: 650;
+}
+
+/* form layout */
+.login-form{
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-form label{
+  display: block;
+  font-size: .92rem;
+  font-weight: 900;
+  margin-bottom: 6px;
+  color: rgba(15, 23, 42, 0.86);
+}
+
+.login-form input{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.75);
+  color: rgba(15, 23, 42, 0.92);
+  outline: none;
+  font-size: 1rem;
+}
+
+.login-form input:focus{
+  border-color: rgba(11, 99, 246, 0.40);
+  box-shadow: 0 0 0 4px rgba(11, 99, 246, 0.14);
+}
+
+/* buttons */
+.login-row{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.login-primary,
+.login-secondary{
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.70);
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+}
+
+.login-primary{
+  background: linear-gradient(180deg, var(--blue-2), var(--blue));
+  border-color: rgba(11,99,246,.35);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(11,99,246,.18);
+}
+
+.login-primary:hover,
+.login-secondary:hover{
+  filter: brightness(.98);
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(15,23,42,.10);
+}
+
+/* message */
+.login-message{
+  min-height: 20px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.70);
+}
+
+.login-message.show.error{
+  color: #b91c1c;
+}
+
+.login-message.show.success{
+  color: #166534;
+}

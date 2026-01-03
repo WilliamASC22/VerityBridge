@@ -1,43 +1,54 @@
-const Data = (function () {
-
-  let cache = null;
-
+var Data = (function () {
   async function loadListings() {
-    if (cache !== null) {
-      return cache;
-    }
+    if (window.db) {
+      try {
+        var snap = await db.collection("listings").get();
+        var out = [];
 
-    const res = await fetch("data/listings.json", {
-      cache: "no-store"
-    });
+        snap.forEach(function (doc) {
+          var obj = doc.data() || {};
+          obj.id = doc.id;
+          out.push(obj);
+        });
 
-    const json = await res.json();
-
-    if (Array.isArray(json)) {
-      cache = json;
-    }
-    else {
-      cache = [];
-    }
-
-    return cache;
-  }
-
-  async function getById(id) {
-    const list = await loadListings();
-
-    for (let i = 0; i < list.length; i++) {
-      if (list[i].id === id) {
-        return list[i];
+        return out;
+      }
+      catch (e) {
+        console.log("Firestore load failed, falling back to JSON.", e);
       }
     }
 
-    return null;
+    var res = await fetch("data/listings.json");
+    return await res.json();
+  }
+
+  async function getListingById(id) {
+    if (!id) {
+      return null;
+    }
+
+    if (window.db) {
+      try {
+        var doc = await db.collection("listings").doc(id).get();
+        if (doc.exists) {
+          var obj = doc.data() || {};
+          obj.id = doc.id;
+          return obj;
+        }
+      }
+      catch (e) {
+        console.log("Firestore get failed, falling back to JSON.", e);
+      }
+    }
+
+    var listings = await loadListings();
+    return listings.find(function (l) {
+      return l.id === id;
+    }) || null;
   }
 
   return {
     loadListings: loadListings,
-    getById: getById
+    getListingById: getListingById
   };
-
 })();

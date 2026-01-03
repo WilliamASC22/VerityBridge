@@ -17,15 +17,20 @@
       <nav class="nav-links">
         <a href="results.html?mode=buy" id="navBuy">Buy</a>
         <a href="results.html?mode=rent" id="navRent">Rent</a>
-        <a href="results.html?mode=sell" id="navSell">Sell</a>
         <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
+        <a href="results.html?mode=sell" id="navSell">Sell</a>
       </nav>
 
       <div class="nav-actions">
         <a class="nav-pill" href="favorites.html" id="favCount">❤️ Favorites</a>
+
+        <span class="muted nav-user" id="navUserEmail" style="display:none;"></span>
+        <a class="pill-link nav-pill" href="login.html" id="navLoginBtn">Log in</a>
+        <button class="pill-link nav-pill" type="button" id="navLogoutBtn" style="display:none;">Log out</button>
       </div>
     </div>
   </header>
+
 
   <main class="container">
     <section class="results-shell">
@@ -170,11 +175,26 @@
     </div>
   </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <script src="assets/js/firebase_init.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/auth_guard.js"></script>
+
+  <!-- Firebase (compat) for GitHub Pages (no build step) -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-init.js"></script>
+  <script src="assets/js/nav_auth.js"></script>
+
   <script src="assets/js/app.js"></script>
   <script src="assets/js/data.js"></script>
   <script src="assets/js/favorites.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="assets/js/results.js"></script>
-  
+
 </body>
 </html>
