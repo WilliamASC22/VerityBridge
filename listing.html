@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Listing | VerityBridge</title>
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
+
+  <!-- Leaflet (Map) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+</head>
+
+<body>
+  <header class="topnav">
+    <div class="nav-inner">
+      <a class="logo" href="index.html"><span class="logo-mark"></span>VerityBridge</a>
+
+      <nav class="nav-links">
+        <a href="results.html?mode=buy" id="navBuy">Buy</a>
+        <a href="results.html?mode=rent" id="navRent">Rent</a>
+        <a href="results.html?mode=sell" id="navSell">Sell</a>
+        <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="nav-pill" href="favorites.html" id="favCount">❤️ Favorites</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <a class="back-link" href="results.html" id="backToResults">← Back to results</a>
+
+    <section class="listing-header">
+      <div>
+        <h1 class="listing-title" id="listingTitle">Loading…</h1>
+        <div class="listing-subtitle muted" id="listingSubtitle"></div>
+
+        <div class="listing-actions">
+          <button class="btn btn-ghost btn-sm" type="button" id="saveBtn">♡ Save</button>
+          <a class="btn btn-primary btn-sm" id="videoBtn" target="_blank" rel="noreferrer">Start video tour</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="listing-layout">
+      <!-- LEFT COLUMN -->
+      <div class="listing-main">
+        <!-- Gallery -->
+        <div class="card listing-gallery">
+          <div class="gallery-hero">
+            <button class="gallery-nav gallery-prev" type="button" id="prevPhoto" aria-label="Previous photo">‹</button>
+            <img id="heroPhoto" class="gallery-hero-img" alt="Listing photo" />
+            <button class="gallery-nav gallery-next" type="button" id="nextPhoto" aria-label="Next photo">›</button>
+          </div>
+
+          <div class="gallery-thumbs" id="thumbs"></div>
+        </div>
+
+        <!-- Price + quick facts -->
+        <div class="listing-facts-bar">
+          <div class="listing-price" id="listingPrice">$—</div>
+          <div class="listing-facts muted" id="listingFacts">—</div>
+        </div>
+
+        <!-- Overview grid -->
+        <div class="card section-card">
+          <div class="section-title">Overview</div>
+          <div class="info-grid" id="overviewGrid"></div>
+        </div>
+
+        <!-- Description -->
+        <div class="card section-card">
+          <div class="section-title">Description</div>
+          <p class="section-text muted" id="listingDescription"></p>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN (sticky) -->
+      <aside class="listing-side">
+        <div class="listing-side-stack">
+          <!-- Map card (shows only if listing has lat/lng) -->
+          <div class="card listing-map-card" id="listingMapCard">
+            <div class="map-head">
+              <div>
+                <div class="card-title">Location</div>
+                <div class="muted tiny">Preview the neighborhood and commute context.</div>
+              </div>
+            </div>
+            <div class="map-body">
+              <div id="listingMap" class="leaflet-shell leaflet-shell-listing"></div>
+            </div>
+            <div class="map-foot muted tiny">
+              Map data © OpenStreetMap contributors
+            </div>
+          </div>
+
+          <!-- Request info card -->
+          <div class="card sticky-card">
+            <div class="section-title">Request information</div>
+            <p class="muted tiny" style="margin:6px 0 12px;">
+              Send a message directly to the seller.
+            </p>
+
+            <form id="requestForm" class="form-stack">
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="fullName">Your name</label>
+                  <input id="fullName" type="text" placeholder="e.g. William" />
+                </div>
+                <div class="form-field">
+                  <label for="email">Your email</label>
+                  <input id="email" type="email" placeholder="you@example.com" />
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="message">Message</label>
+                <textarea id="message" rows="4">Hi — I’d like to schedule a tour. Is this available this week?</textarea>
+              </div>
+
+              <button class="btn btn-primary full" type="submit">Send</button>
+              <a class="btn btn-ghost full" href="results.html">Keep browsing</a>
+            </form>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="muted">VerityBridge</span>
+      <span class="muted">Direct video tours • Transparent negotiation</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/favorites.js"></script>
+
+  <!-- Leaflet (Map) -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script src="assets/js/listing.js"></script>
+  
+</body>
+</html>

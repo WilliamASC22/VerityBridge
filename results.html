@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Results | VerityBridge</title>
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+
+<body>
+  <header class="topnav">
+    <div class="nav-inner">
+      <a class="logo" href="index.html"><span class="logo-mark"></span>VerityBridge</a>
+
+      <nav class="nav-links">
+        <a href="results.html?mode=buy" id="navBuy">Buy</a>
+        <a href="results.html?mode=rent" id="navRent">Rent</a>
+        <a href="results.html?mode=sell" id="navSell">Sell</a>
+        <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="nav-pill" href="favorites.html" id="favCount">❤️ Favorites</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="results-shell">
+      <!-- LEFT -->
+      <aside class="results-sidebar">
+        <div class="sidebar-stack">
+          <form class="searchbar searchbar-compact card" id="resultsSearch">
+            <div class="search-icon" aria-hidden="true">⌕</div>
+            <input id="q" type="text" placeholder="City, ZIP, neighborhood" />
+            <button class="btn btn-primary" type="submit">Search</button>
+          </form>
+
+          <div class="card" id="filtersCard">
+            <div class="card-title" style="padding:12px 12px 0;">Filters</div>
+
+            <div class="filters-grid">
+              <div>
+                <label for="minPrice">Price min</label>
+                <input id="minPrice" type="number" inputmode="numeric" placeholder="e.g. 250000" />
+              </div>
+
+              <div>
+                <label for="maxPrice">Price max</label>
+                <input id="maxPrice" type="number" inputmode="numeric" placeholder="e.g. 800000" />
+              </div>
+
+              <div>
+                <label for="minBeds">Beds (min)</label>
+                <select id="minBeds">
+                  <option value="">Any</option>
+                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="type">Home type</label>
+                <select id="type">
+                  <option value="">Any</option>
+                  <option value="House">House</option>
+                  <option value="Condo">Condo</option>
+                  <option value="Townhome">Townhome</option>
+                  <option value="Apartment">Apartment</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="sort">Sort</label>
+                <select id="sort">
+                  <option value="newest">Newest</option>
+                  <option value="price_asc">Price (low)</option>
+                  <option value="price_desc">Price (high)</option>
+                  <option value="sqft_desc">Sqft (high)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filters-actions">
+              <button class="btn btn-primary btn-sm" type="button" id="apply">Apply</button>
+              <button class="btn btn-ghost btn-sm" type="button" id="reset">Reset</button>
+            </div>
+          </div>
+
+          <div class="card" id="modePanel" style="display:none; padding:12px;">
+            <div class="card-title" id="modeTitle">Mode</div>
+            <p class="muted" id="modeDesc" style="margin:6px 0 0;"></p>
+
+            <div class="mode-grid">
+              <div class="mode-tile">
+                <div class="card-title" style="font-size:1rem;">Instant video consult</div>
+                <p class="muted tiny">Start a private room to talk directly.</p>
+                <a class="btn btn-primary btn-sm full" id="modeCallBtn" target="_blank" rel="noreferrer">Start call</a>
+              </div>
+
+              <div class="mode-tile">
+                <div class="card-title" style="font-size:1rem;">Guided checklist</div>
+                <p class="muted tiny">Steps to price, negotiate, and close.</p>
+                <a class="btn btn-ghost btn-sm full" href="index.html">View overview</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:12px;">
+            <div class="card-title">Why VerityBridge</div>
+            <p class="muted" style="margin:6px 0 0;">
+              Schedule real-time tours and negotiate directly with clarity and transparency.
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT -->
+      <section class="results-content">
+        <div class="results-head">
+          <div>
+            <h2 id="headline">Homes for sale</h2>
+            <div class="muted" id="subhead"></div>
+          </div>
+
+          <div class="muted tiny results-hint">
+            Click a home to preview its location on the map.
+          </div>
+        </div>
+
+        <div class="results-layout" id="resultsLayout">
+          <div class="results-list">
+            <div id="empty" class="card" style="display:none; padding:12px;">
+              <div class="card-title">No results</div>
+              <p class="muted" style="margin:6px 0 0;">Try adjusting your filters.</p>
+            </div>
+
+            <div id="grid" class="card-grid"></div>
+          </div>
+
+          <aside class="results-map is-hidden" id="mapPanel">
+            <div class="map card">
+              <div class="map-head">
+                <div>
+                  <div class="card-title">Map</div>
+                  <div class="muted tiny" id="mapSubtitle">Select a home to view its location</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" type="button" id="closeMap">Hide</button>
+              </div>
+
+              <div class="map-body">
+                <div id="leafletMap" class="leaflet-shell"></div>
+              </div>
+
+              <div class="map-foot muted tiny">
+                Uses OpenStreetMap via Leaflet.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="muted">VerityBridge</span>
+      <span class="muted">Direct video tours • Transparent negotiation</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/favorites.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="assets/js/results.js"></script>
+  
+</body>
+</html>

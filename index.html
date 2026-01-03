@@ -1,0 +1,318 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VerityBridge</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+
+<body>
+  <header class="site-header topnav">
+    <div class="site-header__inner nav-inner">
+      <a class="brand logo" href="index.html" aria-label="VerityBridge home">
+        <span class="brand__mark logo-mark" aria-hidden="true"></span>
+        <span class="brand__name">VerityBridge</span>
+      </a>
+
+      <nav class="primary-nav nav-links" aria-label="Primary">
+        <a href="results.html?mode=buy">Buy</a>
+        <a href="results.html?mode=rent">Rent</a>
+        <a href="results.html?mode=sell">Sell</a>
+        <a href="results.html?mode=mortgage">Mortgage</a>
+      </nav>
+
+      <div class="header-actions nav-actions">
+        <a class="pill-link nav-pill" href="favorites.html" id="favCount">❤️ Favorites</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-container container">
+    <!-- HERO -->
+    <section class="landing-hero hero">
+      <div class="landing-hero__content hero-content" aria-label="Hero">
+        <div class="hero-badge">
+          <span class="badge-dot" aria-hidden="true"></span>
+          Live video tours • Direct negotiation
+        </div>
+
+        <h1 class="hero-title">
+          Buy and sell homes
+          <span class="hero-accent">without the middleman</span>
+        </h1>
+
+        <p class="hero-lede muted">
+          Tour in real time, negotiate directly, and save thousands in commissions—built for clarity,
+          speed, and trust.
+        </p>
+
+        <form class="search-bar searchbar hero-search" id="homeSearch" aria-label="Search homes">
+          <div class="search-bar__icon search-icon" aria-hidden="true">⌕</div>
+          <input
+            id="query"
+            type="text"
+            placeholder="Address, city, ZIP, or neighborhood"
+            autocomplete="off"
+          />
+          <button class="btn btn-primary" type="submit">Explore</button>
+        </form>
+
+        <div class="quick-search hero-chips" aria-label="Popular searches">
+          <button class="chip" type="button" data-q="New York, NY">New York</button>
+          <button class="chip" type="button" data-q="Austin, TX">Austin</button>
+          <button class="chip" type="button" data-q="San Jose, CA">San Jose</button>
+          <button class="chip" type="button" data-q="Buffalo, NY">Buffalo</button>
+        </div>
+
+        <div class="hero-stats" aria-label="Key benefits">
+          <div class="stat">
+            <div class="stat-num">$20k+</div>
+            <div class="stat-label muted">avg commission savings</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">Live</div>
+            <div class="stat-label muted">video tours anytime</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">Direct</div>
+            <div class="stat-label muted">buyer ↔ seller chat</div>
+          </div>
+        </div>
+
+        <div class="value-cards hero-cards" aria-label="Features">
+          <div class="feature-card mini-card">
+            <div class="feature-card__title mini-title">Live video tours</div>
+            <div class="feature-card__sub mini-sub">Tour with the seller instantly, from anywhere</div>
+          </div>
+          <div class="feature-card mini-card">
+            <div class="feature-card__title mini-title">Lower fees</div>
+            <div class="feature-card__sub mini-sub">Negotiate directly and avoid unnecessary commissions</div>
+          </div>
+          <div class="feature-card mini-card">
+            <div class="feature-card__title mini-title">Guided education</div>
+            <div class="feature-card__sub mini-sub">Checklists, pricing tips, and closing support</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <aside class="landing-hero__panel hero-panel" aria-label="Featured listings">
+        <div class="surface-card panel-card">
+          <div class="panel-top">
+            <div>
+              <div class="panel-title">Featured homes</div>
+              <div class="panel-sub muted">Fresh picks updated from listings</div>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="results.html?mode=buy">Browse</a>
+          </div>
+
+          <div id="picks" class="featured-list picks" aria-label="Featured homes list"></div>
+
+          <div class="panel-cta">
+            <a class="btn btn-primary full" href="results.html?mode=buy">Browse all listings</a>
+          </div>
+
+          <div class="panel-foot muted tiny">
+            Tip: Click a home card on results to preview location on the map.
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">How it works</h2>
+        <p class="muted">A calmer, simpler workflow from search → tour → negotiate.</p>
+      </div>
+
+      <div class="how-grid">
+        <div class="how-card card">
+          <div class="how-step">1</div>
+          <div class="how-title">Find homes</div>
+          <p class="muted how-sub">Search listings by city, neighborhood, or ZIP with smart filters.</p>
+        </div>
+
+        <div class="how-card card">
+          <div class="how-step">2</div>
+          <div class="how-title">Tour live</div>
+          <p class="muted how-sub">Jump into a video tour room and ask questions in real time.</p>
+        </div>
+
+        <div class="how-card card">
+          <div class="how-step">3</div>
+          <div class="how-title">Negotiate directly</div>
+          <p class="muted how-sub">Discuss price and terms without pressure and without huge fees.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION / TRUST -->
+    <section class="section">
+      <div class="trust card">
+        <div class="trust-left">
+          <h2 class="trust-title">Built for transparency</h2>
+          <p class="muted trust-sub">
+            Most buyers and sellers rely on brokers because the process is confusing.
+            VerityBridge makes the process understandable with guided checklists and simple negotiation tips.
+          </p>
+
+          <div class="trust-pills">
+            <span class="pill">Pricing guidance</span>
+            <span class="pill">Offer checklist</span>
+            <span class="pill">Closing basics</span>
+            <span class="pill">Red flag reminders</span>
+          </div>
+
+          <a class="btn btn-ghost" href="results.html?mode=sell">Explore Sell mode</a>
+        </div>
+
+        <div class="trust-right">
+          <div class="trust-box">
+            <div class="trust-box-title">Prototype-ready pitch</div>
+            <p class="muted tiny" style="margin:6px 0 0;">
+              This is designed to look strong in a presentation even as a prototype: clear value props, real UI, and a working flow.
+            </p>
+          </div>
+
+          <div class="trust-box">
+            <div class="trust-box-title">Direct video tours</div>
+            <p class="muted tiny" style="margin:6px 0 0;">
+              Listings include instant “Tour today” video rooms for buyer/seller communication.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="cta">
+      <div class="cta-inner">
+        <div>
+          <h2 class="cta-title">Ready to skip the agent fees?</h2>
+          <p class="muted">Start browsing homes and try a live tour flow in seconds.</p>
+        </div>
+        <div class="cta-actions">
+          <a class="btn btn-primary" href="results.html?mode=buy">Browse homes</a>
+          <a class="btn btn-ghost" href="results.html?mode=mortgage">Mortgage mode</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer footer">
+    <div class="page-container container footer-inner">
+      <span class="muted">© VerityBridge</span>
+      <span class="muted">Direct tours • Transparent negotiation • Smarter decisions</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/favorites.js"></script>
+
+  <script>
+    const searchForm = document.getElementById("homeSearch");
+    const searchInput = document.getElementById("query");
+
+    searchForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      let queryText;
+
+      if (searchInput.value) {
+        queryText = searchInput.value.trim();
+      }
+      else {
+        queryText = "";
+      }
+
+      const destination = new URL("results.html", location.href);
+      destination.searchParams.set("mode", "buy");
+
+      if (queryText) {
+        destination.searchParams.set("q", queryText);
+      }
+
+      location.href = destination.toString();
+    });
+
+    const chips = document.querySelectorAll(".chip");
+
+    chips.forEach(function (chipButton) {
+      chipButton.addEventListener("click", function () {
+
+        if (chipButton.dataset.q) {
+          searchInput.value = chipButton.dataset.q;
+        }
+        else {
+          searchInput.value = "";
+        }
+
+        searchForm.requestSubmit();
+      });
+    });
+
+    async function renderFeaturedHomes() {
+      const listings = await Data.loadListings();
+      const featured = listings.slice(0, 3);
+      const picksEl = document.getElementById("picks");
+
+      let html = "";
+
+      featured.forEach(function (listing) {
+
+        let coverPhoto = "";
+        let hasCover = false;
+
+        if (listing.photos && listing.photos.length > 0) {
+          coverPhoto = listing.photos[0];
+          hasCover = true;
+        }
+        else {
+          hasCover = false;
+        }
+
+        let imageClass = "featured-item__image pick-img";
+        let imageStyle = "";
+
+        if (!hasCover) {
+          imageClass = imageClass + " img-fallback";
+        }
+        else {
+          imageStyle = "background-image:url('" + coverPhoto + "')";
+        }
+
+        html += `
+          <a class="featured-item pick" href="listing.html?id=${encodeURIComponent(listing.id)}">
+            <div class="${imageClass}" style="${imageStyle}">
+            </div>
+            <div class="featured-item__meta pick-meta">
+              <div class="featured-item__price pick-price">
+                ${App.money(listing.price)}
+              </div>
+              <div class="featured-item__facts pick-sub muted">
+                ${listing.beds} bd • ${listing.baths} ba • ${App.num(listing.sqft)} sqft
+              </div>
+              <div class="featured-item__addr pick-addr">
+                ${App.escape(listing.address)},
+                ${App.escape(listing.city)},
+                ${App.escape(listing.state)}
+              </div>
+            </div>
+          </a>
+        `;
+      });
+
+      picksEl.innerHTML = html;
+    }
+
+    renderFeaturedHomes();
+
+    Favorites.renderFavCount();
+  </script>
+
+</body>
+</html>

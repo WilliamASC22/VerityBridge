@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Favorites | VerityBridge</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <header class="site-header topnav">
+    <div class="site-header__inner nav-inner">
+      <a class="brand logo" href="index.html"><span class="brand__mark logo-mark"></span>VerityBridge</a>
+      <nav class="primary-nav nav-links" aria-label="Primary">
+        <a href="results.html?mode=buy">Buy</a>
+        <a href="results.html?mode=rent">Rent</a>
+        <a href="results.html?mode=sell">Sell</a>
+        <a href="results.html?mode=mortgage">Mortgage</a>
+      </nav>
+      <div class="header-actions nav-actions">
+        <a class="pill-link nav-pill active" href="favorites.html" id="favCount">❤️ Favorites</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-container container">
+    <div class="results-head" style="margin-top:10px;">
+      <div>
+        <h2>Saved homes</h2>
+        <div class="muted" id="subhead"></div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="results.html">Browse homes</a>
+    </div>
+
+    <div id="empty" class="card" style="display:none;">
+      <div class="card-title">No saved homes yet</div>
+      <p class="muted">Tap “Save” on any listing to keep it here.</p>
+      <a class="btn btn-primary btn-sm" href="results.html">Browse listings</a>
+    </div>
+
+    <div id="grid" class="card-grid"></div>
+  </main>
+
+  <footer class="site-footer footer">
+    <div class="page-container container footer-inner">
+      <span class="muted">© VerityBridge</span>
+      <span class="muted">Your saved homes, always within reach</span>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/favorites.js"></script>
+  <script src="assets/js/favorites_page.js"></script>
+  
+</body>
+</html>
