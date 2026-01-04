@@ -22,7 +22,7 @@
       </nav>
 
       <div class="header-actions nav-actions">
-        <a class="pill-link nav-pill active" href="favorites.html" id="favCount">❤️ Favorites</a>
+        <a class="pill-link nav-pill active" href="favorites.html" id="favCount">❤️ Favorites (0)</a>
         <a class="pill-link nav-pill" href="login.html" id="navLoginBtn">Log in</a>
         <button class="pill-link nav-pill" type="button" id="navLogoutBtn" style="display:none;">Log out</button>
       </div>
@@ -40,7 +40,7 @@
 
     <div id="empty" class="card" style="display:none;">
       <div class="card-title">No saved homes yet</div>
-      <p class="muted">Tap “Save” on any listing to keep it here.</p>
+      <p class="muted">Tap the heart on any listing to keep it here.</p>
       <a class="btn btn-primary btn-sm" href="results.html?mode=buy">Browse listings</a>
     </div>
 
@@ -54,18 +54,28 @@
     </div>
   </footer>
 
-  <!-- Firebase (compat) for GitHub Pages (no build step) -->
+  <!-- Firebase (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
 
+  <!-- Your init must create window.auth + window.db -->
   <script src="assets/js/firebase-init.js"></script>
 
+  <!-- App + data -->
   <script src="assets/js/app.js"></script>
   <script src="assets/js/data.js"></script>
 
-  <!-- Favorites now enforces login for: view favorites, save favorites -->
+  <!-- Favorites (Firestore) -->
   <script src="assets/js/favorites.js"></script>
   <script src="assets/js/favorites_page.js"></script>
+
+  <!-- REQUIRED: protect page + fix login/logout button visibility -->
+  <script src="assets/js/auth-guard.js"></script>
+  <script src="assets/js/nav_auth.js"></script>
+  <script>
+    AuthGuard.protectPage();
+    NavAuth.init();
+  </script>
 </body>
 </html>

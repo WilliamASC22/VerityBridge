@@ -1,278 +1,199 @@
-// Favorites stored in Firestore per-user:
-// /users/{uid}/favorites/{listingId}
-//
-// Rules enforced here:
-// - If not logged in: cannot save favorites
-// - If on favorites.html: user must be logged in (redirects to login)
+// Favorites.js
+// - Stores favorites in Firestore:
+//   /users/{uid}/favorites/{listingId}
+// - Requires login to save and to view favorites page
 
-const Favorites = (function () {
-  let readyResolve;
-  const readyPromise = new Promise(function (resolve) {
-    readyResolve = resolve;
+(function () {
+  var Favorites = {};
+  window.Favorites = Favorites;
+
+  var auth = null;
+  var db = null;
+
+  var ready = false;
+  var readyPromiseResolve = null;
+  var readyPromise = new Promise(function (resolve) {
+    readyPromiseResolve = resolve;
   });
 
-  let currentUid = "";
-  let favSet = new Set();
-  let unsubscribe = null;
+  var currentUser = null;
+  var savedSet = {}; // object as a set: savedSet[id] = true
 
-  function getAuth() {
-    if (!window.Firebase || !window.Firebase.auth) {
-      return null;
-    }
-    return window.Firebase.auth;
+  function getReturnTo() {
+    var page = location.pathname.split("/").pop();
+    return page + location.search;
   }
 
-  function getDb() {
-    if (!window.Firebase || !window.Firebase.db) {
-      return null;
-    }
-    return window.Firebase.db;
+  function goLogin() {
+    var returnTo = getReturnTo();
+    location.href = "login.html?returnTo=" + encodeURIComponent(returnTo);
   }
 
-  function getReturnToValue() {
-    // Keep full page + query
-    return location.pathname.split("/").pop() + location.search;
-  }
-
-  function redirectToLogin() {
-    const returnTo = encodeURIComponent(getReturnToValue());
-    location.href = "login.html?returnTo=" + returnTo;
-  }
-
-  function updateFavCountPill() {
-    const el = document.getElementById("favCount");
+  function setFavCountText(n) {
+    var el = document.getElementById("favCount");
     if (!el) {
       return;
     }
-
-    const count = favSet.size;
-    el.textContent = "❤️ Favorites (" + String(count) + ")";
+    el.textContent = "❤️ Favorites (" + String(n) + ")";
   }
 
-  function wireNavAuthButtons() {
-    const loginBtn = document.getElementById("navLoginBtn");
-    const logoutBtn = document.getElementById("navLogoutBtn");
+  function clearSaved() {
+    savedSet = {};
+  }
 
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", async function () {
-        const auth = getAuth();
-        if (!auth) {
-          return;
-        }
+  function countSaved() {
+    var n = 0;
+    var k;
+    for (k in savedSet) {
+      if (savedSet.hasOwnProperty(k)) {
+        n = n + 1;
+      }
+    }
+    return n;
+  }
 
-        try {
-          await auth.signOut();
-          location.href = "index.html";
-        }
-        catch (err) {
-          console.error(err);
-          alert("Could not log out. Try again.");
-        }
+  async function loadSavedFromFirestore(uid) {
+    clearSaved();
+
+    var snap = await db.collection("users").doc(uid).collection("favorites").get();
+    snap.forEach(function (doc) {
+      savedSet[doc.id] = true;
+    });
+
+    setFavCountText(countSaved());
+  }
+
+  Favorites.waitUntilReady = function () {
+    return readyPromise;
+  };
+
+  Favorites.getUser = function () {
+    return currentUser;
+  };
+
+  Favorites.isSaved = function (listingId) {
+    if (!listingId) {
+      return false;
+    }
+
+    if (savedSet[listingId]) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  };
+
+  // Alias used by results.js + listing.js
+  Favorites.has = function (listingId) {
+    return Favorites.isSaved(listingId);
+  };
+
+  Favorites.isLoggedIn = function () {
+    if (currentUser) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  };
+
+  Favorites.ensureLoggedIn = function () {
+    if (Favorites.isLoggedIn()) {
+      return true;
+    }
+    else {
+      goLogin();
+      return false;
+    }
+  };
+
+  Favorites.renderFavCount = function () {
+    setFavCountText(countSaved());
+  };
+
+  Favorites.getSavedIds = function () {
+    var ids = [];
+    var k;
+    for (k in savedSet) {
+      if (savedSet.hasOwnProperty(k)) {
+        ids.push(k);
+      }
+    }
+    return ids;
+  };
+
+  Favorites.toggle = async function (listingId) {
+    if (!listingId) {
+      return { ok: false, reason: "missing-id" };
+    }
+
+    if (!currentUser) {
+      goLogin();
+      return { ok: false, reason: "not-logged-in" };
+    }
+
+    var uid = currentUser.uid;
+    var ref = db.collection("users").doc(uid).collection("favorites").doc(listingId);
+
+    if (Favorites.isSaved(listingId)) {
+      await ref.delete();
+      delete savedSet[listingId];
+      setFavCountText(countSaved());
+      return { ok: true, saved: false };
+    }
+    else {
+      await ref.set({
+        listingId: listingId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      savedSet[listingId] = true;
+      setFavCountText(countSaved());
+      return { ok: true, saved: true };
     }
+  };
 
-    // Show/hide happens in initAuthListener based on auth state
-    if (loginBtn) {
-      // nothing else needed
-    }
-  }
+  function init() {
+    auth = window.auth;
+    db = window.db;
 
-  function wireSellGuardLink() {
-    // If user clicks Sell in nav and they're not logged in, send them to login first
-    const sellLink = document.getElementById("navSell");
-    if (!sellLink) {
+    if (!auth || !db) {
+      console.error("favorites.js: window.auth/window.db missing. Check firebase-init.js order.");
+      ready = true;
+      setFavCountText(0);
+      readyPromiseResolve();
       return;
     }
 
-    sellLink.addEventListener("click", function (e) {
-      const auth = getAuth();
-      if (!auth) {
+    auth.onAuthStateChanged(async function (user) {
+      currentUser = user;
+
+      if (!user) {
+        clearSaved();
+        setFavCountText(0);
+
+        if (!ready) {
+          ready = true;
+          readyPromiseResolve();
+        }
         return;
       }
 
-      const user = auth.currentUser;
+      try {
+        await loadSavedFromFirestore(user.uid);
+      }
+      catch (e) {
+        console.error("favorites.js: failed to load favorites", e);
+        clearSaved();
+        setFavCountText(0);
+      }
 
-      if (!user) {
-        e.preventDefault();
-        redirectToLogin();
+      if (!ready) {
+        ready = true;
+        readyPromiseResolve();
       }
     });
   }
 
-  function enforceFavoritesPageAuth(user) {
-    const onFavoritesPage = location.pathname.split("/").pop() === "favorites.html";
-
-    if (onFavoritesPage && !user) {
-      redirectToLogin();
-    }
-  }
-
-  function startFavoritesListener(uid) {
-    const db = getDb();
-    if (!db) {
-      favSet = new Set();
-      updateFavCountPill();
-      readyResolve(true);
-      return;
-    }
-
-    // Stop old listener
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-
-    favSet = new Set();
-    updateFavCountPill();
-
-    const ref = db.collection("users").doc(uid).collection("favorites");
-
-    unsubscribe = ref.onSnapshot(
-      function (snap) {
-        const next = new Set();
-
-        snap.forEach(function (doc) {
-          next.add(doc.id);
-        });
-
-        favSet = next;
-        updateFavCountPill();
-        readyResolve(true);
-      },
-      function (err) {
-        console.error("Favorites listener error:", err);
-        readyResolve(true);
-      }
-    );
-  }
-
-  function initAuthListener() {
-    const auth = getAuth();
-    if (!auth) {
-      // If Firebase isn't ready, still resolve so pages don't hang forever
-      readyResolve(true);
-      return;
-    }
-
-    auth.onAuthStateChanged(function (user) {
-      const loginBtn = document.getElementById("navLoginBtn");
-      const logoutBtn = document.getElementById("navLogoutBtn");
-
-      if (user) {
-        currentUid = user.uid || "";
-        enforceFavoritesPageAuth(user);
-        startFavoritesListener(currentUid);
-
-        if (loginBtn) {
-          loginBtn.style.display = "none";
-        }
-        if (logoutBtn) {
-          logoutBtn.style.display = "inline-flex";
-        }
-      }
-      else {
-        currentUid = "";
-        if (unsubscribe) {
-          unsubscribe();
-          unsubscribe = null;
-        }
-
-        favSet = new Set();
-        updateFavCountPill();
-        enforceFavoritesPageAuth(null);
-
-        if (loginBtn) {
-          loginBtn.style.display = "inline-flex";
-        }
-        if (logoutBtn) {
-          logoutBtn.style.display = "none";
-        }
-
-        readyResolve(true);
-      }
-    });
-  }
-
-  async function waitUntilReady() {
-    return readyPromise;
-  }
-
-  function isLoggedIn() {
-    const auth = getAuth();
-    if (!auth) {
-      return false;
-    }
-    return Boolean(auth.currentUser);
-  }
-
-  function has(listingId) {
-    return favSet.has(String(listingId || ""));
-  }
-
-  function toggle(listingId) {
-    const id = String(listingId || "");
-    if (!id) {
-      return;
-    }
-
-    if (!isLoggedIn()) {
-      redirectToLogin();
-      return;
-    }
-
-    const db = getDb();
-    const auth = getAuth();
-
-    if (!db || !auth || !auth.currentUser) {
-      return;
-    }
-
-    const uid = auth.currentUser.uid;
-    const ref = db.collection("users").doc(uid).collection("favorites").doc(id);
-
-    // Update UI immediately (fast), then write to Firestore
-    if (favSet.has(id)) {
-      favSet.delete(id);
-      updateFavCountPill();
-
-      ref.delete().catch(function (err) {
-        console.error(err);
-      });
-    }
-    else {
-      favSet.add(id);
-      updateFavCountPill();
-
-      ref.set({
-        listingId: id,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(function (err) {
-        console.error(err);
-      });
-    }
-  }
-
-  async function read() {
-    await waitUntilReady();
-    return Array.from(favSet);
-  }
-
-  async function renderFavCount() {
-    await waitUntilReady();
-    updateFavCountPill();
-  }
-
-  // Boot
-  wireNavAuthButtons();
-  wireSellGuardLink();
-  initAuthListener();
-
-  return {
-    waitUntilReady,
-    isLoggedIn,
-    has,
-    toggle,
-    read,
-    renderFavCount
-  };
+  init();
 })();

@@ -38,7 +38,6 @@
     </div>
   </header>
 
-
   <main class="container">
     <a class="back-link" href="results.html" id="backToResults">← Back to results</a>
 
@@ -106,34 +105,39 @@
             </div>
           </div>
 
-          <!-- Request info card -->
-          <div class="card sticky-card">
-            <div class="section-title">Request information</div>
-            <p class="muted tiny" style="margin:6px 0 12px;">
-              Send a message directly to the seller.
-            </p>
+          <!-- Request info card (polished) -->
+          <div class="card sticky-card request-card">
+            <div class="request-head">
+              <div class="request-title">Contact seller</div>
+              <div class="request-sub muted tiny">Ask a question or request a tour. No commitment required.</div>
+            </div>
 
-            <form id="requestForm" class="form-stack">
-              <div class="form-row">
-                <div class="form-field">
-                  <label for="fullName">Your name</label>
-                  <input id="fullName" type="text" placeholder="e.g. William" />
-                </div>
-                <div class="form-field">
-                  <label for="email">Your email</label>
-                  <input id="email" type="email" placeholder="you@example.com" />
-                </div>
+            <!-- FIXED FORM MARKUP (no form-row / grid weirdness) -->
+            <form id="requestForm" class="request-form">
+              <div class="request-field">
+                <label for="fullName">Your name</label>
+                <input id="fullName" type="text" placeholder="Full name" />
               </div>
 
-              <div class="form-field">
+              <div class="request-field">
+                <label for="email">Email</label>
+                <input id="email" type="email" placeholder="you@example.com" />
+              </div>
+
+              <div class="request-field">
                 <label for="message">Message</label>
-                <textarea id="message" rows="4">Hi — I’d like to schedule a tour. Is this available this week?</textarea>
+                <textarea id="message" rows="4">Hi — I’m interested in this property and would like to schedule a tour. Is this available this week?</textarea>
               </div>
 
-              <button class="btn btn-primary full" type="submit">Send</button>
+              <button class="btn btn-primary full" type="submit">Contact seller</button>
               <a class="btn btn-ghost full" href="results.html">Keep browsing</a>
+
+              <div class="request-foot muted tiny">
+                You won’t be spammed. Your info is only shared with the seller.
+              </div>
             </form>
           </div>
+
         </div>
       </aside>
     </section>
@@ -146,19 +150,14 @@
     </div>
   </footer>
 
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-  <script src="assets/js/firebase_init.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/auth_guard.js"></script>
-
-  <!-- Firebase (compat) for GitHub Pages (no build step) -->
+  <!-- Firebase (compat) for GitHub Pages (load ONCE) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
   <script src="assets/js/firebase-init.js"></script>
+
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/auth-guard.js"></script>
   <script src="assets/js/nav_auth.js"></script>
 
   <script src="assets/js/app.js"></script>
@@ -173,6 +172,5 @@
   ></script>
 
   <script src="assets/js/listing.js"></script>
-
 </body>
 </html>

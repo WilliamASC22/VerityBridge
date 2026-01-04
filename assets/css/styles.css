@@ -1349,3 +1349,54 @@ body.login-page{
   flex-wrap:wrap;
   margin-top: 6px;
 }
+
+
+/* Request card form polish (only inside request card) */
+.request-card .request-form {
+  margin-top: 12px;
+}
+
+.request-card .request-field {
+  margin-bottom: 12px;
+}
+
+.request-card .request-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.request-card .request-field input,
+.request-card .request-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #ffffff;
+  font-size: 0.95rem;
+}
+
+.request-card .request-field textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.35;
+}
+
+.request-card .request-field input:focus,
+.request-card .request-field textarea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.request-card .btn.full {
+  width: 100%;
+}
+
+.request-card .request-foot {
+  margin-top: 10px;
+  line-height: 1.35;
+}

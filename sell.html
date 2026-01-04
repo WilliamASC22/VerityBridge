@@ -8,6 +8,7 @@
 </head>
 
 <body class="sell-page" data-require-auth="true">
+
   <header class="topnav">
     <div class="nav-inner">
       <a class="logo" href="index.html"><span class="logo-mark"></span>VerityBridge</a>
@@ -32,7 +33,7 @@
       <div class="sell-head">
         <div>
           <h1>Post your home</h1>
-          <p class="muted sell-sub">Add details and paste Unsplash image links. No uploads required.</p>
+          <p class="muted sell-sub">Enter details and paste image links. We will find map coordinates automatically.</p>
         </div>
 
         <div class="sell-tip">
@@ -41,7 +42,8 @@
       </div>
 
       <form id="sellForm" class="sell-form">
-        <!-- Row 1 -->
+
+        <!-- Listing mode + price -->
         <div class="sell-grid">
           <div class="field">
             <label for="mode">Listing type</label>
@@ -58,19 +60,18 @@
           </div>
         </div>
 
-        <!-- Row 2 -->
+        <!-- Title -->
         <div class="field">
           <label for="title">Title</label>
           <input id="title" type="text" placeholder="Renovated 3BR in South Congress" required />
         </div>
 
-        <!-- Row 3 -->
+        <!-- Address -->
         <div class="field">
           <label for="address">Address</label>
           <input id="address" type="text" placeholder="1287 Willow Ridge Dr" required />
         </div>
 
-        <!-- Row 4 -->
         <div class="sell-grid">
           <div class="field">
             <label for="city">City</label>
@@ -83,7 +84,6 @@
           </div>
         </div>
 
-        <!-- Row 5 -->
         <div class="sell-grid">
           <div class="field">
             <label for="zip">Zip</label>
@@ -91,16 +91,29 @@
           </div>
 
           <div class="field">
+            <label for="neighborhood">Neighborhood (optional)</label>
+            <input id="neighborhood" type="text" placeholder="South Congress" />
+          </div>
+        </div>
+
+        <!-- Type + Beds/Baths -->
+        <div class="sell-grid">
+          <div class="field">
             <label for="type">Home type</label>
             <select id="type">
               <option value="House">House</option>
               <option value="Condo">Condo</option>
               <option value="Townhome">Townhome</option>
+              <option value="Apartment">Apartment</option>
             </select>
+          </div>
+
+          <div class="field">
+            <label for="yearBuilt">Year built (optional)</label>
+            <input id="yearBuilt" type="number" placeholder="1998" />
           </div>
         </div>
 
-        <!-- Row 6 -->
         <div class="sell-grid">
           <div class="field">
             <label for="beds">Beds</label>
@@ -113,37 +126,67 @@
           </div>
         </div>
 
-        <!-- Row 7 -->
         <div class="sell-grid">
           <div class="field">
-            <label for="sqft">Sqft</label>
+            <label for="sqft">Home sqft (optional)</label>
             <input id="sqft" type="number" placeholder="1780" />
           </div>
 
+          <!-- ✅ Consistent with your Firestore: lotSqft -->
           <div class="field">
-            <label for="yearBuilt">Year built (optional)</label>
-            <input id="yearBuilt" type="number" placeholder="1998" />
+            <label for="lotSqft">Lot size (sqft)</label>
+            <input id="lotSqft" type="number" placeholder="6100" />
           </div>
         </div>
 
-        <!-- Row 8 -->
+        <!-- ✅ Parking / HOA / Taxes -->
+        <div class="sell-grid">
+          <div class="field">
+            <label for="parking">Parking</label>
+            <input id="parking" type="text" placeholder="e.g. 2-car garage" />
+          </div>
+
+          <div class="field">
+            <label for="hoa">HOA (number)</label>
+            <input id="hoa" type="number" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="sell-grid">
+          <div class="field">
+            <label for="taxes">Taxes (number)</label>
+            <input id="taxes" type="number" placeholder="8600" />
+          </div>
+
+          <div class="field">
+            <label for="status">Status</label>
+            <input id="statusField" type="text" value="active" disabled />
+          </div>
+        </div>
+
+        <!-- Description -->
         <div class="field">
           <label for="description">Description</label>
-          <textarea id="description" rows="4" placeholder="What makes this home special?"></textarea>
+          <textarea id="description" rows="4" placeholder="What makes this home special"></textarea>
         </div>
 
         <!-- Photos -->
         <div class="field">
           <label for="photoUrls">Photo URLs (one per line)</label>
-          <textarea id="photoUrls" rows="4"
+          <textarea
+            id="photoUrls"
+            rows="4"
             placeholder="https://images.unsplash.com/photo-1568605114967-8130f3a36994
-https://images.unsplash.com/photo-1600585154340-be6161a56a0c"></textarea>
+https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
+          ></textarea>
 
           <div class="muted" style="margin-top:8px;">
-            Paste direct image links. You can add up to 8.
+            Paste direct image links (max 8). Unsplash works great.
           </div>
 
-          <div id="photoPreview" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:10px;"></div>
+          <div id="photoPreview"
+               style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:10px;">
+          </div>
         </div>
 
         <div class="sell-actions">
@@ -157,17 +200,84 @@ https://images.unsplash.com/photo-1600585154340-be6161a56a0c"></textarea>
     </section>
   </main>
 
-  <!-- Firebase compat scripts -->
+  <!-- Firebase (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
 
-  <!-- Your scripts -->
+  <!-- Your Firebase init must set window.auth + window.db -->
   <script src="assets/js/firebase-init.js"></script>
+
+  <!-- Helpers -->
   <script src="assets/js/app.js"></script>
+
+  <!-- Favorites count in navbar -->
   <script src="assets/js/favorites.js"></script>
-  <script src="assets/js/nav_auth.js"></script>
-  <script src="assets/js/auth-guard.js"></script>
+
+  <!-- Simple beginner auth gate for Sell page -->
+  <script>
+    (function () {
+
+      function getAuth() {
+        if (window.auth) {
+          return window.auth;
+        }
+        return null;
+      }
+
+      function showLoggedInNav(user) {
+        var loginBtn = document.getElementById("navLoginBtn");
+        var logoutBtn = document.getElementById("navLogoutBtn");
+
+        if (!loginBtn || !logoutBtn) {
+          return;
+        }
+
+        if (user) {
+          loginBtn.style.display = "none";
+          logoutBtn.style.display = "inline-flex";
+        }
+        else {
+          loginBtn.style.display = "inline-flex";
+          logoutBtn.style.display = "none";
+        }
+      }
+
+      function wireLogout(auth) {
+        var logoutBtn = document.getElementById("navLogoutBtn");
+
+        if (!logoutBtn) {
+          return;
+        }
+
+        logoutBtn.addEventListener("click", function () {
+          auth.signOut().then(function () {
+            location.href = "login.html?returnTo=" + encodeURIComponent("sell.html");
+          });
+        });
+      }
+
+      var auth = getAuth();
+
+      if (!auth) {
+        alert("Firebase auth not ready. Check firebase-init.js order.");
+        return;
+      }
+
+      auth.onAuthStateChanged(function (user) {
+        showLoggedInNav(user);
+
+        if (!user) {
+          location.href = "login.html?returnTo=" + encodeURIComponent("sell.html");
+        }
+      });
+
+      wireLogout(auth);
+
+    })();
+  </script>
+
+  <!-- Sell logic -->
   <script src="assets/js/sell.js"></script>
 </body>
 </html>

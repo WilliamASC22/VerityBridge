@@ -1,38 +1,45 @@
 (async function () {
-  // If Favorites exists, update the little favorites counter
-  if (typeof Favorites !== "undefined") {
+
+  // Wait for favorites/auth to initialize
+  if (typeof Favorites !== "undefined" && Favorites.waitUntilReady) {
+    await Favorites.waitUntilReady();
+  }
+
+  if (typeof Favorites !== "undefined" && Favorites.renderFavCount) {
     Favorites.renderFavCount();
   }
 
   // Get listing id from the URL: .../listing.html?id=123
-  const url = new URL(location.href);
-  const listingId = url.searchParams.get("id");
+  var url = new URL(location.href);
+  var listingId = url.searchParams.get("id");
 
   // Grab DOM elements
-  const titleEl = document.getElementById("listingTitle");
-  const subtitleEl = document.getElementById("listingSubtitle");
-  const priceEl = document.getElementById("listingPrice");
-  const factsEl = document.getElementById("listingFacts");
-  const descEl = document.getElementById("listingDescription");
-  const overviewGrid = document.getElementById("overviewGrid");
+  var titleEl = document.getElementById("listingTitle");
+  var subtitleEl = document.getElementById("listingSubtitle");
+  var priceEl = document.getElementById("listingPrice");
+  var factsEl = document.getElementById("listingFacts");
+  var descEl = document.getElementById("listingDescription");
+  var overviewGrid = document.getElementById("overviewGrid");
 
-  const saveBtn = document.getElementById("saveBtn");
-  const videoBtn = document.getElementById("videoBtn");
+  var saveBtn = document.getElementById("saveBtn");
+  var videoBtn = document.getElementById("videoBtn");
 
-  const heroPhoto = document.getElementById("heroPhoto");
-  const thumbs = document.getElementById("thumbs");
-  const prevPhotoBtn = document.getElementById("prevPhoto");
-  const nextPhotoBtn = document.getElementById("nextPhoto");
+  var heroPhoto = document.getElementById("heroPhoto");
+  var thumbs = document.getElementById("thumbs");
+  var prevPhotoBtn = document.getElementById("prevPhoto");
+  var nextPhotoBtn = document.getElementById("nextPhoto");
 
-  const requestForm = document.getElementById("requestForm");
+  var requestForm = document.getElementById("requestForm");
+  var requestAboutTitleEl = document.getElementById("requestAboutTitle");
 
   // Map elements (Location card)
-  const mapCard = document.getElementById("listingMapCard");
-  const mapEl = document.getElementById("listingMap");
+  var mapCard = document.getElementById("listingMapCard");
+  var mapEl = document.getElementById("listingMap");
 
-  // --------------------------
-  // Small helper functions
-  // --------------------------
+  // Gallery state
+  var photoUrls = [];
+  var activeIndex = 0;
+
   function safeString(x) {
     if (x === null || x === undefined) {
       return "";
@@ -43,8 +50,7 @@
   }
 
   function escapeHtml(s) {
-    // If App.escape exists, use it. Otherwise return the string as-is.
-    const text = safeString(s);
+    var text = safeString(s);
 
     if (typeof App !== "undefined" && typeof App.escape === "function") {
       return App.escape(text);
@@ -59,7 +65,7 @@
       return App.money(n);
     }
     else {
-      const v = Number(n || 0);
+      var v = Number(n || 0);
       return "$" + v.toLocaleString();
     }
   }
@@ -69,22 +75,25 @@
       return App.num(n);
     }
     else {
-      const v = Number(n || 0);
-      return v.toLocaleString();
+      var v2 = Number(n || 0);
+      return v2.toLocaleString();
     }
   }
 
   function placeholderDataUrl(text) {
-    const t = safeString(text);
+    var t = safeString(text);
 
-    let safe = t;
+    var safe = t;
     if (!safe) {
       safe = "Photo unavailable";
+    }
+    else {
+      safe = safe;
     }
 
     safe = safe.slice(0, 60);
 
-    const svg =
+    var svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700">' +
         '<defs>' +
           '<linearGradient id="g" x1="0" x2="0" y1="0" y2="1">' +
@@ -99,93 +108,108 @@
               ' font-family="Arial" font-size="44" fill="#6b7280">' + safe + "</text>" +
       "</svg>";
 
-    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   }
 
   function jitsiRoomForListing(id) {
-    const base = "veritybridge-" + safeString(id);
-    return base.replace(/[^a-zA-Z0-9_-]/g, "");
+    return "veritybridge-" + String(id || "");
   }
 
-  // --------------------------
-  // Gallery logic
-  // --------------------------
-  let photoUrls = [];
-  let activeIndex = 0;
+  function setRequestAboutTitle() {
+    if (!requestAboutTitleEl) {
+      return;
+    }
 
-  function updateThumbActive() {
-    const buttons = thumbs.querySelectorAll("button[data-idx]");
+    if (!titleEl) {
+      requestAboutTitleEl.textContent = "this listing";
+      return;
+    }
 
-    buttons.forEach(function (btn) {
-      const idx = Number(btn.getAttribute("data-idx"));
-      btn.classList.toggle("thumb-active", idx === activeIndex);
-    });
+    var t = titleEl.textContent;
+
+    if (t && t.trim() && t.trim() !== "Loading…") {
+      requestAboutTitleEl.textContent = t.trim();
+    }
+    else {
+      requestAboutTitleEl.textContent = "this listing";
+    }
   }
 
   function setHero(index) {
-    if (!photoUrls.length) {
-      heroPhoto.src = placeholderDataUrl("Photo unavailable");
-      heroPhoto.alt = "Photo unavailable";
+    if (!heroPhoto) {
       return;
     }
 
-    // Wrap around so going left from 0 goes to the last image
-    activeIndex = (index + photoUrls.length) % photoUrls.length;
+    if (!photoUrls.length) {
+      return;
+    }
 
+    if (index < 0) {
+      index = photoUrls.length - 1;
+    }
+    else if (index >= photoUrls.length) {
+      index = 0;
+    }
+    else {
+      index = index;
+    }
+
+    activeIndex = index;
     heroPhoto.src = photoUrls[activeIndex];
-    heroPhoto.alt = "Listing photo " + (activeIndex + 1) + " of " + photoUrls.length;
 
-    updateThumbActive();
+    if (thumbs) {
+      var all = thumbs.querySelectorAll("button");
+      for (var i = 0; i < all.length; i = i + 1) {
+        all[i].classList.remove("active");
+      }
+
+      if (all[activeIndex]) {
+        all[activeIndex].classList.add("active");
+      }
+    }
   }
 
   function renderThumbs() {
-    thumbs.innerHTML = "";
-
-    if (!photoUrls.length) {
+    if (!thumbs) {
       return;
     }
 
-    photoUrls.forEach(function (src, idx) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "thumb";
-      btn.setAttribute("data-idx", String(idx));
+    var html = [];
 
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = "Thumbnail " + (idx + 1);
-      img.loading = "lazy";
+    for (var i = 0; i < photoUrls.length; i = i + 1) {
+      var src = photoUrls[i];
+      html.push(
+        '<button class="thumb" type="button" data-i="' + String(i) + '">' +
+          '<img src="' + src + '" alt="Thumbnail" />' +
+        "</button>"
+      );
+    }
 
-      img.onerror = function () {
-        img.onerror = null;
-        img.src = placeholderDataUrl("Photo unavailable");
-      };
+    thumbs.innerHTML = html.join("");
 
-      btn.addEventListener("click", function () {
-        setHero(idx);
-      });
+    thumbs.addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-i]");
+      if (!btn) {
+        return;
+      }
 
-      btn.appendChild(img);
-      thumbs.appendChild(btn);
+      var idx = Number(btn.getAttribute("data-i")) || 0;
+      setHero(idx);
     });
-
-    updateThumbActive();
   }
 
-  heroPhoto.onerror = function () {
-    heroPhoto.onerror = null;
-    heroPhoto.src = placeholderDataUrl("Photo unavailable");
-  };
+  if (prevPhotoBtn) {
+    prevPhotoBtn.addEventListener("click", function () {
+      setHero(activeIndex - 1);
+    });
+  }
 
-  prevPhotoBtn.addEventListener("click", function () {
-    setHero(activeIndex - 1);
-  });
+  if (nextPhotoBtn) {
+    nextPhotoBtn.addEventListener("click", function () {
+      setHero(activeIndex + 1);
+    });
+  }
 
-  nextPhotoBtn.addEventListener("click", function () {
-    setHero(activeIndex + 1);
-  });
-
-  // Keyboard navigation
   window.addEventListener("keydown", function (e) {
     if (e.key === "ArrowLeft") {
       setHero(activeIndex - 1);
@@ -196,84 +220,157 @@
     }
   });
 
-  // --------------------------
   // Load listing
-  // --------------------------
-  const allListings = await Data.loadListings();
-  const listing = allListings.find(function (l) {
-    return l.id === listingId;
-  });
+  var allListings = await Data.loadListings();
+
+  var listing = null;
+  for (var j = 0; j < allListings.length; j = j + 1) {
+    if (allListings[j].id === listingId) {
+      listing = allListings[j];
+      break;
+    }
+  }
 
   if (!listing) {
-    titleEl.textContent = "Listing not found";
-    subtitleEl.textContent = "Try going back to results.";
+    if (titleEl) {
+      titleEl.textContent = "Listing not found";
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = "Try going back to results.";
+    }
 
     if (mapCard) {
       mapCard.style.display = "none";
     }
 
+    setRequestAboutTitle();
     return;
   }
 
   // Top info
-  titleEl.textContent = listing.address;
+  if (titleEl) {
+    titleEl.textContent = listing.address;
+  }
 
-  let neighborhood = listing.neighborhood;
+  setRequestAboutTitle();
+
+  // a couple extra tries in case other code updates title later
+  setTimeout(setRequestAboutTitle, 150);
+  setTimeout(setRequestAboutTitle, 350);
+  setTimeout(setRequestAboutTitle, 700);
+
+  var neighborhood = listing.neighborhood;
   if (neighborhood === null || neighborhood === undefined) {
     neighborhood = "";
   }
-
-  subtitleEl.textContent =
-    (listing.city + ", " + listing.state + " " + listing.zip + " • " + neighborhood)
-      .trim();
-
-  priceEl.textContent = formatMoney(listing.price);
-
-  factsEl.textContent =
-    listing.beds +
-    " bd • " +
-    listing.baths +
-    " ba • " +
-    formatNumber(listing.sqft) +
-    " sqft • " +
-    listing.type;
-
-  if (listing.description) {
-    descEl.textContent = listing.description;
-  }
   else {
-    descEl.textContent = "No description provided yet.";
+    neighborhood = String(neighborhood);
   }
 
-  // Overview tiles
-  const overviewItems = [
-    ["Type", listing.type],
-    ["Year built", listing.yearBuilt || "—"],
-    ["Lot", listing.lot || "—"],
-    ["Parking", listing.parking || "—"],
-    ["HOA", listing.hoa || "—"],
-    ["Taxes", listing.taxes || "—"]
-  ];
+  if (subtitleEl) {
+    subtitleEl.textContent =
+      (listing.city + ", " + listing.state + " " + listing.zip + " • " + neighborhood).trim();
+  }
 
-  overviewGrid.innerHTML = overviewItems
-    .map(function (pair) {
-      const k = pair[0];
-      const v = pair[1];
+  if (priceEl) {
+    priceEl.textContent = formatMoney(listing.price);
+  }
 
-      return (
+  if (factsEl) {
+    factsEl.textContent =
+      listing.beds +
+      " bd • " +
+      listing.baths +
+      " ba • " +
+      formatNumber(listing.sqft) +
+      " sqft • " +
+      listing.type;
+  }
+
+  if (descEl) {
+    if (listing.description) {
+      descEl.textContent = listing.description;
+    }
+    else {
+      descEl.textContent = "No description provided yet.";
+    }
+  }
+
+  // Overview tiles (Firestore-consistent: lotSqft)
+  if (overviewGrid) {
+    var lotDisplay = "—";
+    if (typeof listing.lotSqft === "number" && listing.lotSqft > 0) {
+      lotDisplay = formatNumber(listing.lotSqft) + " sqft";
+    }
+    else {
+      lotDisplay = "—";
+    }
+
+    var hoaDisplay = listing.hoa;
+    if (hoaDisplay === null || hoaDisplay === undefined) {
+      hoaDisplay = "—";
+    }
+    else {
+      if (typeof hoaDisplay === "number") {
+        hoaDisplay = formatMoney(hoaDisplay);
+      }
+      else {
+        hoaDisplay = String(hoaDisplay);
+      }
+    }
+
+    var taxesDisplay = listing.taxes;
+    if (taxesDisplay === null || taxesDisplay === undefined) {
+      taxesDisplay = "—";
+    }
+    else {
+      if (typeof taxesDisplay === "number") {
+        taxesDisplay = formatMoney(taxesDisplay);
+      }
+      else {
+        taxesDisplay = String(taxesDisplay);
+      }
+    }
+
+    var overviewItems = [
+      ["Type", listing.type],
+      ["Year built", listing.yearBuilt || "—"],
+      ["Lot", lotDisplay],
+      ["Parking", listing.parking || "—"],
+      ["HOA", hoaDisplay],
+      ["Taxes", taxesDisplay]
+    ];
+
+    var tiles = [];
+
+    for (var k = 0; k < overviewItems.length; k = k + 1) {
+      var pair = overviewItems[k];
+      var key = pair[0];
+      var val = pair[1];
+
+      tiles.push(
         '<div class="info-tile">' +
-          '<div class="info-label">' + escapeHtml(k) + "</div>" +
-          '<div class="info-value">' + escapeHtml(String(v)) + "</div>" +
+          '<div class="info-label">' + escapeHtml(key) + "</div>" +
+          '<div class="info-value">' + escapeHtml(String(val)) + "</div>" +
         "</div>"
       );
-    })
-    .join("");
+    }
 
-  // --------------------------
+    overviewGrid.innerHTML = tiles.join("");
+  }
+
   // Favorites
-  // --------------------------
   function syncSaveBtn() {
-    const on = Favorites.has(listing.id);
+    if (!saveBtn) {
+      return;
+    }
+
+    if (typeof Favorites === "undefined" || !Favorites.has) {
+      saveBtn.textContent = "♡ Save";
+      return;
+    }
+
+    var on = Favorites.has(listing.id);
 
     if (on) {
       saveBtn.textContent = "❤️ Saved";
@@ -285,22 +382,74 @@
 
   syncSaveBtn();
 
-  saveBtn.addEventListener("click", function () {
-    Favorites.toggle(listing.id);
-    Favorites.renderFavCount();
-    syncSaveBtn();
-  });
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async function () {
 
-  // --------------------------
+      if (typeof Favorites === "undefined") {
+        return;
+      }
+
+      if (Favorites.waitUntilReady) {
+        await Favorites.waitUntilReady();
+      }
+
+      if (Favorites.ensureLoggedIn) {
+        if (!Favorites.ensureLoggedIn()) {
+          return;
+        }
+      }
+
+      if (Favorites.toggle) {
+        var res = await Favorites.toggle(listing.id);
+
+        if (res && res.ok) {
+          Favorites.renderFavCount();
+          syncSaveBtn();
+        }
+      }
+
+    });
+  }
+
   // Video room
-  // --------------------------
-  videoBtn.href =
-    "https://meet.jit.si/" + encodeURIComponent(jitsiRoomForListing(listing.id));
+  if (videoBtn) {
 
-  // --------------------------
+    videoBtn.href =
+      "https://meet.jit.si/" +
+      encodeURIComponent(jitsiRoomForListing(listing.id));
+
+    function openVideoTour(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      var msg =
+        "This will open a live video tour in a new tab.\n\n" +
+        "You may be asked to allow camera and microphone access.\n\n" +
+        "Continue";
+
+      var ok = confirm(msg);
+
+      if (ok) {
+        window.open(videoBtn.href, "_blank");
+      }
+      else {
+        // do nothing
+      }
+
+      return false;
+    }
+
+    // Catch early + normal interactions
+    videoBtn.addEventListener("mousedown", openVideoTour);
+    videoBtn.addEventListener("click", openVideoTour);
+    videoBtn.addEventListener("touchstart", openVideoTour);
+  }
+
+
   // Gallery images
-  // --------------------------
-  photoUrls = (listing.photos || []).filter(Boolean);
+  photoUrls = (listing.photos || []).filter(function (x) {
+    return Boolean(x);
+  });
 
   if (!photoUrls.length) {
     photoUrls = [placeholderDataUrl("Photo unavailable")];
@@ -309,25 +458,30 @@
   renderThumbs();
   setHero(0);
 
-  // --------------------------
   // Location map (Leaflet)
-  // --------------------------
   function hasCoords(l) {
-    return l && typeof l.lat === "number" && typeof l.lng === "number";
+    if (!l) {
+      return false;
+    }
+    if (typeof l.lat !== "number") {
+      return false;
+    }
+    if (typeof l.lng !== "number") {
+      return false;
+    }
+    return true;
   }
 
   if (!mapCard || !mapEl || typeof L === "undefined") {
-    // Missing DOM or Leaflet not loaded -> hide card
     if (mapCard) {
       mapCard.style.display = "none";
     }
   }
   else if (!hasCoords(listing)) {
-    // No coords in data -> hide card
     mapCard.style.display = "none";
   }
   else {
-    const listingMap = L.map("listingMap", {
+    var listingMap = L.map("listingMap", {
       zoomControl: true,
       scrollWheelZoom: false
     }).setView([listing.lat, listing.lng], 13);
@@ -336,7 +490,7 @@
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(listingMap);
 
-    const marker = L.marker([listing.lat, listing.lng]).addTo(listingMap);
+    var marker = L.marker([listing.lat, listing.lng]).addTo(listingMap);
 
     marker.bindPopup(
       '<div style="font-weight:900">' + escapeHtml(listing.address) + "</div>" +
@@ -345,55 +499,18 @@
       "</div>"
     );
 
-    // Leaflet needs this if the map is inside a card/sidebar
     setTimeout(function () {
       listingMap.invalidateSize();
       marker.openPopup();
     }, 80);
   }
 
-  // --------------------------
-  // Request form (no backend) -> opens email client
-  // --------------------------
-  requestForm.addEventListener("submit", function (e) {
-    e.preventDefault();
+  // Request form (demo)
+  if (requestForm) {
+    requestForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      alert("Request sent (demo). Add email/send logic later.");
+    });
+  }
 
-    const name = document.getElementById("fullName").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const message = document.getElementById("message").value.trim();
-
-    const subject = "VerityBridge: Request info for " + listing.address;
-
-    let nameLine = name;
-    if (!nameLine) {
-      nameLine = "—";
-    }
-
-    let emailLine = email;
-    if (!emailLine) {
-      emailLine = "—";
-    }
-
-    let thanksName = name;
-    if (!thanksName) {
-      thanksName = "";
-    }
-
-    const body =
-      (
-        "Hello,\n\n" +
-        "I'm interested in " + listing.address + ".\n\n" +
-        "Name: " + nameLine + "\n" +
-        "Email: " + emailLine + "\n\n" +
-        message + "\n\n" +
-        "Thanks,\n" + thanksName
-      ).trim();
-
-    const mailto =
-      "mailto:" +
-      "?subject=" + encodeURIComponent(subject) +
-      "&body=" + encodeURIComponent(body);
-
-    window.location.href = mailto;
-  });
 })();

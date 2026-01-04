@@ -60,17 +60,11 @@
     clearMsg();
   }
 
-  function getReturnTo() {
-    var params = new URLSearchParams(location.search);
-    var returnTo = params.get("returnTo");
-
-    if (returnTo) {
-      return returnTo;
+    function getReturnTo() {
+    const params = new URLSearchParams(location.search);
+    const returnTo = params.get("returnTo") || params.get("next");
+    return returnTo || "index.html";
     }
-    else {
-      return "index.html";
-    }
-  }
 
   function ensureUserDoc(user) {
     if (!db) {
