@@ -9,6 +9,79 @@
     Favorites.renderFavCount();
   }
 
+  // ---------- Nice modal confirm (instead of browser confirm) ----------
+  function vbConfirmVideoTour(onOk) {
+    var overlay = document.getElementById("vbModal");
+    var cancelBtn = document.getElementById("vbCancel");
+    var okBtn = document.getElementById("vbOk");
+
+    if (!overlay || !cancelBtn || !okBtn) {
+      // fallback if modal not present
+      var msg =
+        "This will open a live video tour in a new tab.\n\n" +
+        "You may be asked to allow camera and microphone access.\n\n" +
+        "Continue";
+
+      var ok = confirm(msg);
+
+      if (ok) {
+        onOk();
+      }
+      else {
+        // do nothing
+      }
+
+      return;
+    }
+
+    function closeModal() {
+      overlay.classList.remove("is-open");
+      document.body.style.overflow = "";
+    }
+
+    function openModal() {
+      overlay.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function cleanup() {
+      cancelBtn.removeEventListener("click", onCancel);
+      okBtn.removeEventListener("click", onAccept);
+      overlay.removeEventListener("click", onOverlay);
+      window.removeEventListener("keydown", onKey);
+    }
+
+    function onCancel() {
+      cleanup();
+      closeModal();
+    }
+
+    function onAccept() {
+      cleanup();
+      closeModal();
+      onOk();
+    }
+
+    function onOverlay(e) {
+      if (e.target === overlay) {
+        onCancel();
+      }
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    }
+
+    cancelBtn.addEventListener("click", onCancel);
+    okBtn.addEventListener("click", onAccept);
+    overlay.addEventListener("click", onOverlay);
+    window.addEventListener("keydown", onKey);
+
+    openModal();
+  }
+
   // Get listing id from the URL: .../listing.html?id=123
   var url = new URL(location.href);
   var listingId = url.searchParams.get("id");
@@ -30,7 +103,6 @@
   var nextPhotoBtn = document.getElementById("nextPhoto");
 
   var requestForm = document.getElementById("requestForm");
-  var requestAboutTitleEl = document.getElementById("requestAboutTitle");
 
   // Map elements (Location card)
   var mapCard = document.getElementById("listingMapCard");
@@ -113,26 +185,6 @@
 
   function jitsiRoomForListing(id) {
     return "veritybridge-" + String(id || "");
-  }
-
-  function setRequestAboutTitle() {
-    if (!requestAboutTitleEl) {
-      return;
-    }
-
-    if (!titleEl) {
-      requestAboutTitleEl.textContent = "this listing";
-      return;
-    }
-
-    var t = titleEl.textContent;
-
-    if (t && t.trim() && t.trim() !== "Loading…") {
-      requestAboutTitleEl.textContent = t.trim();
-    }
-    else {
-      requestAboutTitleEl.textContent = "this listing";
-    }
   }
 
   function setHero(index) {
@@ -243,7 +295,6 @@
       mapCard.style.display = "none";
     }
 
-    setRequestAboutTitle();
     return;
   }
 
@@ -251,13 +302,6 @@
   if (titleEl) {
     titleEl.textContent = listing.address;
   }
-
-  setRequestAboutTitle();
-
-  // a couple extra tries in case other code updates title later
-  setTimeout(setRequestAboutTitle, 150);
-  setTimeout(setRequestAboutTitle, 350);
-  setTimeout(setRequestAboutTitle, 700);
 
   var neighborhood = listing.neighborhood;
   if (neighborhood === null || neighborhood === undefined) {
@@ -411,7 +455,7 @@
     });
   }
 
-  // Video room
+  // Video room (nice modal)
   if (videoBtn) {
 
     videoBtn.href =
@@ -422,29 +466,17 @@
       e.preventDefault();
       e.stopPropagation();
 
-      var msg =
-        "This will open a live video tour in a new tab.\n\n" +
-        "You may be asked to allow camera and microphone access.\n\n" +
-        "Continue";
-
-      var ok = confirm(msg);
-
-      if (ok) {
+      vbConfirmVideoTour(function () {
         window.open(videoBtn.href, "_blank");
-      }
-      else {
-        // do nothing
-      }
+      });
 
       return false;
     }
 
-    // Catch early + normal interactions
     videoBtn.addEventListener("mousedown", openVideoTour);
     videoBtn.addEventListener("click", openVideoTour);
     videoBtn.addEventListener("touchstart", openVideoTour);
   }
-
 
   // Gallery images
   photoUrls = (listing.photos || []).filter(function (x) {

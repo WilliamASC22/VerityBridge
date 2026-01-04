@@ -1400,3 +1400,84 @@ body.login-page{
   margin-top: 10px;
   line-height: 1.35;
 }
+
+
+/* --- Video tour modal (custom confirm) --- */
+.vb-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9999;
+}
+
+.vb-modal-overlay.is-open {
+  display: flex;
+}
+
+.vb-modal {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.20);
+  overflow: hidden;
+}
+
+.vb-modal-head {
+  padding: 16px 16px 10px;
+}
+
+.vb-modal-title {
+  font-weight: 900;
+  font-size: 18px;
+  margin: 0;
+}
+
+.vb-modal-sub {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.vb-modal-body {
+  padding: 0 16px 14px;
+}
+
+.vb-modal-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 106, 255, 0.08);
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.vb-modal-note .vb-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  background: rgba(0, 106, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.vb-modal-actions {
+  display: flex;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.vb-modal-actions .full {
+  flex: 1;
+}

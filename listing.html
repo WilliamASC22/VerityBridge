@@ -48,7 +48,7 @@
 
         <div class="listing-actions">
           <button class="btn btn-ghost btn-sm" type="button" id="saveBtn">♡ Save</button>
-          <a class="btn btn-primary btn-sm" id="videoBtn" target="_blank" rel="noreferrer">Start video tour</a>
+          <a class="btn btn-primary btn-sm" id="videoBtn" rel="noreferrer">Start video tour</a>
         </div>
       </div>
     </section>
@@ -105,14 +105,13 @@
             </div>
           </div>
 
-          <!-- Request info card (polished) -->
+          <!-- Request info card -->
           <div class="card sticky-card request-card">
             <div class="request-head">
               <div class="request-title">Contact seller</div>
               <div class="request-sub muted tiny">Ask a question or request a tour. No commitment required.</div>
             </div>
 
-            <!-- FIXED FORM MARKUP (no form-row / grid weirdness) -->
             <form id="requestForm" class="request-form">
               <div class="request-field">
                 <label for="fullName">Your name</label>
@@ -150,7 +149,36 @@
     </div>
   </footer>
 
-  <!-- Firebase (compat) for GitHub Pages (load ONCE) -->
+  <!-- Video tour modal (custom confirm) -->
+  <div class="vb-modal-overlay" id="vbModal">
+    <div class="vb-modal" role="dialog" aria-modal="true" aria-labelledby="vbModalTitle">
+      <div class="vb-modal-head">
+        <h3 class="vb-modal-title" id="vbModalTitle">Start live video tour</h3>
+        <p class="vb-modal-sub" id="vbModalSub">
+          This opens a secure video room in a new tab.
+        </p>
+      </div>
+
+      <div class="vb-modal-body">
+        <div class="vb-modal-note">
+          <div class="vb-icon">🎥</div>
+          <div>
+            You may be asked to allow camera and microphone access.
+            <div class="muted tiny" style="margin-top:6px;">
+              You can still join with camera off.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vb-modal-actions">
+        <button class="btn btn-ghost btn-sm full" type="button" id="vbCancel">Not now</button>
+        <button class="btn btn-primary btn-sm full" type="button" id="vbOk">Open tour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase (load ONCE) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>

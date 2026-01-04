@@ -9,6 +9,79 @@
     Favorites.renderFavCount();
   }
 
+  // ---------- Nice modal confirm (instead of browser confirm) ----------
+  function vbConfirmVideoTour(onOk) {
+    var overlay = document.getElementById("vbModal");
+    var cancelBtn = document.getElementById("vbCancel");
+    var okBtn = document.getElementById("vbOk");
+
+    if (!overlay || !cancelBtn || !okBtn) {
+      // fallback if modal not present
+      var msg =
+        "This will open a live video tour in a new tab.\n\n" +
+        "You may be asked to allow camera and microphone access.\n\n" +
+        "Continue";
+
+      var ok = confirm(msg);
+
+      if (ok) {
+        onOk();
+      }
+      else {
+        // do nothing
+      }
+
+      return;
+    }
+
+    function closeModal() {
+      overlay.classList.remove("is-open");
+      document.body.style.overflow = "";
+    }
+
+    function openModal() {
+      overlay.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function cleanup() {
+      cancelBtn.removeEventListener("click", onCancel);
+      okBtn.removeEventListener("click", onAccept);
+      overlay.removeEventListener("click", onOverlay);
+      window.removeEventListener("keydown", onKey);
+    }
+
+    function onCancel() {
+      cleanup();
+      closeModal();
+    }
+
+    function onAccept() {
+      cleanup();
+      closeModal();
+      onOk();
+    }
+
+    function onOverlay(e) {
+      if (e.target === overlay) {
+        onCancel();
+      }
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    }
+
+    cancelBtn.addEventListener("click", onCancel);
+    okBtn.addEventListener("click", onAccept);
+    overlay.addEventListener("click", onOverlay);
+    window.addEventListener("keydown", onKey);
+
+    openModal();
+  }
+
   // DOM refs
   var searchForm = document.getElementById("resultsSearch");
   var searchInput = document.getElementById("q");
@@ -34,7 +107,7 @@
   var mapSubtitle = document.getElementById("mapSubtitle");
   var closeMapButton = document.getElementById("closeMap");
 
-  // Sell/Mortgage panel (exists in results.html)
+  // Sell/Mortgage panel
   var modePanel = document.getElementById("modePanel");
   var modeTitle = document.getElementById("modeTitle");
   var modeDesc = document.getElementById("modeDesc");
@@ -243,7 +316,6 @@
       heart = "♡";
     }
 
-    // NOTE: video tour button now has a class so we can attach confirm handlers
     return (
       '<article class="home-card" data-listing-card data-id="' + escapeHtml(listing.id) + '">' +
         '<a class="home-img" href="' + listingHref + '" aria-label="Open listing">' +
@@ -269,14 +341,13 @@
     );
   }
 
-  // Attach confirm handlers to all video buttons (same style as listing.js)
+  // Same behavior as listing.js: ask before opening Jitsi
   function attachVideoTourHandlers() {
     var buttons = document.querySelectorAll(".videoBtn");
 
     for (var i = 0; i < buttons.length; i = i + 1) {
       var btn = buttons[i];
 
-      // prevent double-binding when re-rendering
       if (btn.getAttribute("data-video-bound") === "1") {
         continue;
       }
@@ -286,24 +357,15 @@
         e.preventDefault();
         e.stopPropagation();
 
-        var msg =
-          "This will open a live video tour in a new tab.\n\n" +
-          "You may be asked to allow camera and microphone access.\n\n" +
-          "Continue";
+        var link = this;
 
-        var ok = confirm(msg);
-
-        if (ok) {
-          window.open(this.href, "_blank");
-        }
-        else {
-          // do nothing
-        }
+        vbConfirmVideoTour(function () {
+          window.open(link.href, "_blank");
+        });
 
         return false;
       }
 
-      // Catch early + normal interactions
       btn.addEventListener("mousedown", openVideoTour);
       btn.addEventListener("click", openVideoTour);
       btn.addEventListener("touchstart", openVideoTour);
@@ -640,7 +702,6 @@
       }
       listingGrid.innerHTML = html.join("");
 
-      // Important: attach confirm handlers after the cards exist
       attachVideoTourHandlers();
     }
   }
