@@ -18,10 +18,13 @@
         <a href="results.html?mode=rent" id="navRent">Rent</a>
         <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
         <a href="sell.html" id="navSell" class="active">Sell</a>
+        <!-- My listings link is inserted after Sell by nav_auth.js when logged in -->
       </nav>
 
       <div class="nav-actions">
-        <a class="nav-pill" href="favorites.html" id="favCount">❤️ Favorites (0)</a>
+        <a class="nav-pill" href="favorites.html" id="favCount">❤️ Favorites</a>
+        <span class="muted nav-user" id="navUserEmail" style="display:none;"></span>
+
         <a class="pill-link nav-pill" href="login.html" id="navLoginBtn">Log in</a>
         <button class="pill-link nav-pill" type="button" id="navLogoutBtn" style="display:none;">Log out</button>
       </div>
@@ -132,14 +135,14 @@
             <input id="sqft" type="number" placeholder="1780" />
           </div>
 
-          <!-- ✅ Consistent with your Firestore: lotSqft -->
+          <!-- Consistent with your Firestore: lotSqft -->
           <div class="field">
             <label for="lotSqft">Lot size (sqft)</label>
             <input id="lotSqft" type="number" placeholder="6100" />
           </div>
         </div>
 
-        <!-- ✅ Parking / HOA / Taxes -->
+        <!-- Parking / HOA / Taxes -->
         <div class="sell-grid">
           <div class="field">
             <label for="parking">Parking</label>
@@ -208,73 +211,19 @@ https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
   <!-- Your Firebase init must set window.auth + window.db -->
   <script src="assets/js/firebase-init.js"></script>
 
-  <!-- Helpers -->
-  <script src="assets/js/app.js"></script>
+  <!-- Shared helpers + auth -->
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/auth-guard.js"></script>
+  <script src="assets/js/nav_auth.js"></script>
 
-  <!-- Favorites count in navbar -->
+  <!-- Helpers + favorites count -->
+  <script src="assets/js/app.js"></script>
   <script src="assets/js/favorites.js"></script>
 
-  <!-- Simple beginner auth gate for Sell page -->
+  <!-- Protect the page (same pattern as your other pages) -->
   <script>
-    (function () {
-
-      function getAuth() {
-        if (window.auth) {
-          return window.auth;
-        }
-        return null;
-      }
-
-      function showLoggedInNav(user) {
-        var loginBtn = document.getElementById("navLoginBtn");
-        var logoutBtn = document.getElementById("navLogoutBtn");
-
-        if (!loginBtn || !logoutBtn) {
-          return;
-        }
-
-        if (user) {
-          loginBtn.style.display = "none";
-          logoutBtn.style.display = "inline-flex";
-        }
-        else {
-          loginBtn.style.display = "inline-flex";
-          logoutBtn.style.display = "none";
-        }
-      }
-
-      function wireLogout(auth) {
-        var logoutBtn = document.getElementById("navLogoutBtn");
-
-        if (!logoutBtn) {
-          return;
-        }
-
-        logoutBtn.addEventListener("click", function () {
-          auth.signOut().then(function () {
-            location.href = "login.html?returnTo=" + encodeURIComponent("sell.html");
-          });
-        });
-      }
-
-      var auth = getAuth();
-
-      if (!auth) {
-        alert("Firebase auth not ready. Check firebase-init.js order.");
-        return;
-      }
-
-      auth.onAuthStateChanged(function (user) {
-        showLoggedInNav(user);
-
-        if (!user) {
-          location.href = "login.html?returnTo=" + encodeURIComponent("sell.html");
-        }
-      });
-
-      wireLogout(auth);
-
-    })();
+    AuthGuard.protectPage();
+    NavAuth.init();
   </script>
 
   <!-- Sell logic -->

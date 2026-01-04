@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Listings | VerityBridge</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+
+<body data-require-auth="true">
+  <header class="site-header topnav">
+    <div class="site-header__inner nav-inner">
+      <a class="brand logo" href="index.html">
+        <span class="brand__mark logo-mark"></span>VerityBridge
+      </a>
+
+      <nav class="primary-nav nav-links" aria-label="Primary">
+        <a href="results.html?mode=buy" id="navBuy">Buy</a>
+        <a href="results.html?mode=rent" id="navRent">Rent</a>
+        <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
+        <a href="sell.html" id="navSell">Sell</a>
+        <!-- My listings link will be inserted after Sell by nav_auth.js when logged in -->
+      </nav>
+
+      <div class="header-actions nav-actions">
+        <a class="pill-link nav-pill" href="favorites.html" id="favCount">❤️ Favorites</a>
+        <a class="pill-link nav-pill" href="login.html" id="navLoginBtn">Log in</a>
+        <button class="pill-link nav-pill" type="button" id="navLogoutBtn" style="display:none;">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-container container">
+    <div class="results-head" style="margin-top:10px;">
+      <div>
+        <h2>My listings</h2>
+        <div class="muted" id="myListingsSubhead"></div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a class="btn btn-ghost btn-sm" href="sell.html">Create a listing</a>
+      </div>
+    </div>
+
+    <div id="adminTools" class="card" style="display:none; padding:12px; margin-top:12px;">
+      <div class="card-title">Admin tools</div>
+      <p class="muted tiny" style="margin:6px 0 10px;">
+        You can optionally load all listings to moderate and delete any listing.
+      </p>
+      <button class="btn btn-ghost btn-sm" type="button" id="loadAllBtn">Load all listings</button>
+      <button class="btn btn-ghost btn-sm" type="button" id="loadMineBtn" style="margin-left:8px;">Load my listings</button>
+    </div>
+
+    <div id="myListingsEmpty" class="card" style="display:none; padding:12px; margin-top:12px;">
+      <div class="card-title">No listings yet</div>
+      <p class="muted" style="margin:6px 0 0;">Create a listing to see it here.</p>
+      <a class="btn btn-primary btn-sm" href="sell.html" style="margin-top:10px;">Create a listing</a>
+    </div>
+
+    <div id="myListingsGrid" class="card-grid" style="margin-top:12px;"></div>
+  </main>
+
+  <footer class="site-footer footer">
+    <div class="page-container container footer-inner">
+      <span class="muted">© VerityBridge</span>
+      <span class="muted">Manage your listings</span>
+    </div>
+  </footer>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+
+  <script src="assets/js/firebase-init.js"></script>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/favorites.js"></script>
+
+  <script src="assets/js/auth-guard.js"></script>
+  <script src="assets/js/nav_auth.js"></script>
+
+  <script src="assets/js/my_listings.js"></script>
+
+  <script>
+    AuthGuard.protectPage();
+    NavAuth.init();
+  </script>
+</body>
+</html>
