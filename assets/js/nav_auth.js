@@ -1,67 +1,104 @@
 (function () {
-  function getById(id) {
-    return document.getElementById(id);
+
+  function getAuth() {
+    if (!window.auth) {
+      return null;
+    }
+    return window.auth;
   }
 
-  var loginBtn = getById("navLoginBtn");
-  var logoutBtn = getById("navLogoutBtn");
-  var userEmailEl = getById("navUserEmail");
-
-  if (!window.auth || !window.auth.onAuthStateChanged) {
-    return;
+  function show(el) {
+    if (!el) {
+      return;
+    }
+    el.style.display = "";
   }
 
-  function showLogin() {
-    if (loginBtn) {
-      loginBtn.style.display = "";
+  function hide(el) {
+    if (!el) {
+      return;
     }
-    if (logoutBtn) {
-      logoutBtn.style.display = "none";
-    }
-    if (userEmailEl) {
-      userEmailEl.style.display = "none";
-      userEmailEl.textContent = "";
-    }
+    el.style.display = "none";
   }
 
-  function showLogout(user) {
-    if (loginBtn) {
-      loginBtn.style.display = "none";
-    }
-    if (logoutBtn) {
-      logoutBtn.style.display = "";
-    }
-    if (userEmailEl) {
-      userEmailEl.style.display = "";
-      if (user && user.email) {
-        userEmailEl.textContent = user.email;
-      }
-      else {
-        userEmailEl.textContent = "";
-      }
-    }
-  }
+  var auth = getAuth();
+
+  var loginBtn = document.getElementById("navLoginBtn");
+  var logoutBtn = document.getElementById("navLogoutBtn");
+
+  var sellLink = document.getElementById("navSell");
+  var favLink = document.getElementById("favCount");
 
   if (logoutBtn) {
     logoutBtn.addEventListener("click", function () {
-      window.auth
-        .signOut()
-        .then(function () {
-          location.reload();
-        })
-        .catch(function (err) {
-          console.error(err);
-          alert("Could not log out. Try again.");
-        });
+      if (!auth) {
+        return;
+      }
+
+      auth.signOut().then(function () {
+        location.href = "index.html";
+      }).catch(function (err) {
+        console.error(err);
+        alert("Could not log out. Try again.");
+      });
     });
   }
 
-  window.auth.onAuthStateChanged(function (user) {
-    if (user) {
-      showLogout(user);
-    }
-    else {
-      showLogin();
-    }
-  });
+  if (sellLink) {
+    sellLink.addEventListener("click", function (e) {
+      if (!auth) {
+        return;
+      }
+
+      var user = auth.currentUser;
+
+      if (!user) {
+        e.preventDefault();
+        location.href = "login.html?returnTo=" + encodeURIComponent("sell.html");
+      }
+    });
+  }
+
+  if (favLink) {
+    favLink.addEventListener("click", function (e) {
+      if (!auth) {
+        return;
+      }
+
+      var user = auth.currentUser;
+
+      if (!user) {
+        e.preventDefault();
+        location.href = "login.html?returnTo=" + encodeURIComponent("favorites.html");
+      }
+    });
+  }
+
+  if (auth) {
+    auth.onAuthStateChanged(function (user) {
+      if (user) {
+        hide(loginBtn);
+        show(logoutBtn);
+
+        if (sellLink) {
+          sellLink.setAttribute("href", "sell.html");
+        }
+        if (favLink) {
+          favLink.setAttribute("href", "favorites.html");
+        }
+      }
+      else {
+        show(loginBtn);
+        hide(logoutBtn);
+
+        if (sellLink) {
+          sellLink.setAttribute("href", "login.html?returnTo=" + encodeURIComponent("sell.html"));
+        }
+        if (favLink) {
+          favLink.setAttribute("href", "login.html?returnTo=" + encodeURIComponent("favorites.html"));
+        }
+      }
+    });
+  }
+
 })();

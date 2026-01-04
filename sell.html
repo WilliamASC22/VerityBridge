@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sell | VerityBridge</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+
+<body class="sell-page" data-require-auth="true">
+  <header class="topnav">
+    <div class="nav-inner">
+      <a class="logo" href="index.html"><span class="logo-mark"></span>VerityBridge</a>
+
+      <nav class="nav-links">
+        <a href="results.html?mode=buy" id="navBuy">Buy</a>
+        <a href="results.html?mode=rent" id="navRent">Rent</a>
+        <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
+        <a href="sell.html" id="navSell" class="active">Sell</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="nav-pill" href="favorites.html" id="favCount">❤️ Favorites (0)</a>
+        <a class="pill-link nav-pill" href="login.html" id="navLoginBtn">Log in</a>
+        <button class="pill-link nav-pill" type="button" id="navLogoutBtn" style="display:none;">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="sell-wrap">
+    <section class="card sell-card">
+      <div class="sell-head">
+        <div>
+          <h1>Post your home</h1>
+          <p class="muted sell-sub">Add details and paste Unsplash image links. No uploads required.</p>
+        </div>
+
+        <div class="sell-tip">
+          Tip: Use image links that start with <strong>https://images.unsplash.com/</strong>
+        </div>
+      </div>
+
+      <form id="sellForm" class="sell-form">
+        <!-- Row 1 -->
+        <div class="sell-grid">
+          <div class="field">
+            <label for="mode">Listing type</label>
+            <select id="mode">
+              <option value="buy">For sale (Buy)</option>
+              <option value="rent">For rent (Rent)</option>
+              <option value="mortgage">Mortgage / Financing</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="price" id="priceLabel">Price</label>
+            <input id="price" type="number" placeholder="589000" required />
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" type="text" placeholder="Renovated 3BR in South Congress" required />
+        </div>
+
+        <!-- Row 3 -->
+        <div class="field">
+          <label for="address">Address</label>
+          <input id="address" type="text" placeholder="1287 Willow Ridge Dr" required />
+        </div>
+
+        <!-- Row 4 -->
+        <div class="sell-grid">
+          <div class="field">
+            <label for="city">City</label>
+            <input id="city" type="text" placeholder="Austin" required />
+          </div>
+
+          <div class="field">
+            <label for="state">State</label>
+            <input id="state" type="text" placeholder="TX" required />
+          </div>
+        </div>
+
+        <!-- Row 5 -->
+        <div class="sell-grid">
+          <div class="field">
+            <label for="zip">Zip</label>
+            <input id="zip" type="text" placeholder="78745" required />
+          </div>
+
+          <div class="field">
+            <label for="type">Home type</label>
+            <select id="type">
+              <option value="House">House</option>
+              <option value="Condo">Condo</option>
+              <option value="Townhome">Townhome</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 6 -->
+        <div class="sell-grid">
+          <div class="field">
+            <label for="beds">Beds</label>
+            <input id="beds" type="number" placeholder="3" required />
+          </div>
+
+          <div class="field">
+            <label for="baths">Baths</label>
+            <input id="baths" type="number" placeholder="2" required />
+          </div>
+        </div>
+
+        <!-- Row 7 -->
+        <div class="sell-grid">
+          <div class="field">
+            <label for="sqft">Sqft</label>
+            <input id="sqft" type="number" placeholder="1780" />
+          </div>
+
+          <div class="field">
+            <label for="yearBuilt">Year built (optional)</label>
+            <input id="yearBuilt" type="number" placeholder="1998" />
+          </div>
+        </div>
+
+        <!-- Row 8 -->
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" rows="4" placeholder="What makes this home special?"></textarea>
+        </div>
+
+        <!-- Photos -->
+        <div class="field">
+          <label for="photoUrls">Photo URLs (one per line)</label>
+          <textarea id="photoUrls" rows="4"
+            placeholder="https://images.unsplash.com/photo-1568605114967-8130f3a36994
+https://images.unsplash.com/photo-1600585154340-be6161a56a0c"></textarea>
+
+          <div class="muted" style="margin-top:8px;">
+            Paste direct image links. You can add up to 8.
+          </div>
+
+          <div id="photoPreview" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:10px;"></div>
+        </div>
+
+        <div class="sell-actions">
+          <button class="btn btn-primary" type="submit">Publish listing</button>
+          <a class="btn btn-ghost" href="results.html?mode=buy">Cancel</a>
+        </div>
+
+        <div class="muted" id="status" style="min-height:20px;"></div>
+        <div class="muted" id="resultLink"></div>
+      </form>
+    </section>
+  </main>
+
+  <!-- Firebase compat scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+
+  <!-- Your scripts -->
+  <script src="assets/js/firebase-init.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/favorites.js"></script>
+  <script src="assets/js/nav_auth.js"></script>
+  <script src="assets/js/auth-guard.js"></script>
+  <script src="assets/js/sell.js"></script>
+</body>
+</html>

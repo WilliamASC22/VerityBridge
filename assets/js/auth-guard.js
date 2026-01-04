@@ -1,42 +1,34 @@
-var AuthGuard = (function () {
+(function () {
 
   function redirectToLogin() {
-    var parts = location.pathname.split("/");
-    var page = parts[parts.length - 1];
-
+    var page = location.pathname.split("/").pop();
     if (!page) {
       page = "index.html";
     }
 
-    var next = encodeURIComponent(page);
-    location.href = "login.html?returnTo=" + next;
+    location.href = "login.html?returnTo=" + encodeURIComponent(page);
   }
 
-  function protectPage() {
-    var requiresAuth = false;
+  var body = document.body;
 
-    if (document.body && document.body.dataset && document.body.dataset.requireAuth === "true") {
-      requiresAuth = true;
-    }
+  var requiresAuth = false;
+  if (body && body.dataset && body.dataset.requireAuth === "true") {
+    requiresAuth = true;
+  }
 
-    if (!requiresAuth) {
-      return;
-    }
+  if (!requiresAuth) {
+    return;
+  }
 
-    if (!window.auth || !window.auth.onAuthStateChanged) {
+  if (!window.auth) {
+    console.error("Auth not initialized. Make sure firebase-init.js loads before auth-guard.js");
+    return;
+  }
+
+  window.auth.onAuthStateChanged(function (user) {
+    if (!user) {
       redirectToLogin();
-      return;
     }
-
-    window.auth.onAuthStateChanged(function (user) {
-      if (!user) {
-        redirectToLogin();
-      }
-    });
-  }
-
-  return {
-    protectPage: protectPage
-  };
+  });
 
 })();

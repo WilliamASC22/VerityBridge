@@ -1249,3 +1249,103 @@ body.login-page{
 .login-message.show.success{
   color: #166534;
 }
+
+
+/* ============================================================
+   SELL PAGE
+============================================================ */
+
+.sell-wrap{
+  max-width: 980px;
+  margin: 18px auto 26px;
+}
+
+.sell-card{
+  padding: 18px;
+  background:
+    radial-gradient(900px 260px at 85% 0%, rgba(11,99,246,.10), transparent 55%),
+    #fff;
+}
+
+.sell-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sell-head h1{
+  margin:0;
+  font-size: 1.8rem;
+  letter-spacing:-.02em;
+  font-weight: 950;
+}
+
+.sell-sub{
+  margin: 6px 0 0;
+  font-weight: 700;
+}
+
+.sell-form{
+  display:grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.sell-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 900px){
+  .sell-grid{ grid-template-columns: 1fr; }
+}
+
+.field label{
+  display:block;
+  font-size:.9rem;
+  font-weight: 900;
+  margin-bottom: 6px;
+  color:#111827;
+}
+
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border:1px solid rgba(229,231,235,.95);
+  outline:none;
+  background:#fff;
+  font-size: 1rem;
+}
+
+.field textarea{
+  min-height: 110px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  border-color: rgba(11,99,246,.55);
+  box-shadow: 0 0 0 4px rgba(11,99,246,.14);
+}
+
+.sell-tip{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(11,99,246,.18);
+  background: rgba(11,99,246,.06);
+  font-weight: 750;
+}
+
+.sell-actions{
+  display:flex;
+  gap: 10px;
+  flex-wrap:wrap;
+  margin-top: 6px;
+}
