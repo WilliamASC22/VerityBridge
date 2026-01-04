@@ -1481,3 +1481,37 @@ body.login-page{
 .vb-modal-actions .full {
   flex: 1;
 }
+
+
+/* Navbar logo container */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+/* Logo image */
+.logo-img {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+/* Logo text */
+.logo-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #0f172a; /* matches your current text */
+}
+
+/* Slightly larger on desktop */
+@media (min-width: 768px) {
+  .logo-img {
+    height: 40px;
+  }
+  .logo-text {
+    font-size: 1.15rem;
+  }
+}
