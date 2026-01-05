@@ -283,9 +283,22 @@
   var previewEl = byId("photoPreview");
 
   var modeEl = byId("mode");
+  var sellerEmailEl = byId("sellerEmail");
 
   if (!form) {
     return;
+  }
+
+  // Auto-fill seller email from logged-in user (if blank)
+  var a = getAuth();
+  if (a && sellerEmailEl) {
+    a.onAuthStateChanged(function (user) {
+      if (user && user.email) {
+        if (!sellerEmailEl.value || !String(sellerEmailEl.value).trim()) {
+          sellerEmailEl.value = String(user.email);
+        }
+      }
+    });
   }
 
   if (modeEl) {
@@ -330,6 +343,8 @@
     var geo = null;
     var data = null;
 
+    var sellerEmail = "";
+
     e.preventDefault();
 
     auth = getAuth();
@@ -352,6 +367,17 @@
     listingMode = getTextValue("mode");
     if (!listingMode) {
       listingMode = "buy";
+    }
+
+    sellerEmail = getTextValue("sellerEmail");
+    if (!sellerEmail) {
+      // fallback (should usually be filled)
+      sellerEmail = String(user.email || "").trim();
+    }
+
+    if (!sellerEmail) {
+      alert("Please enter a seller email.");
+      return;
     }
 
     address = getTextValue("address");
@@ -383,6 +409,9 @@
     data = {
       id: listingId,
       ownerId: user.uid,
+
+      sellerEmail: sellerEmail,
+
       status: "active",
 
       mode: listingMode,

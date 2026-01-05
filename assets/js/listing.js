@@ -298,6 +298,10 @@
     return;
   }
 
+  if (requestForm) {
+    requestForm.dataset.sellerEmail = String(listing.sellerEmail || "").trim();
+  }
+
   // Top info
   if (titleEl) {
     titleEl.textContent = listing.address;
@@ -537,12 +541,88 @@
     }, 80);
   }
 
-  // Request form (demo)
+  // Request form (custom modal, no mailto query params)
   if (requestForm) {
-    requestForm.addEventListener("submit", function (e) {
+    requestForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-      alert("Request sent (demo). Add email/send logic later.");
+
+      const sellerEmail =
+        document.getElementById("requestForm")?.dataset?.sellerEmail?.trim() || "";
+
+      if (!sellerEmail) {
+        openMailErrorModal("Seller email isn’t available for this listing yet.");
+        return;
+      }
+
+      // Build a standard message (since we removed inputs)
+      var buyerEmail = "";
+      try {
+        if (window.auth && window.auth.currentUser && window.auth.currentUser.email) {
+          buyerEmail = String(window.auth.currentUser.email);
+        }
+      } catch (_) {
+        buyerEmail = "";
+      }
+
+      var details =
+        "Tour request (VerityBridge)\n\n" +
+        "Listing: " + (document.title || "VerityBridge Listing") + "\n" +
+        "Address: " + String(listing.address || "") + ", " + String(listing.city || "") + ", " + String(listing.state || "") + " " + String(listing.zip || "") + "\n" +
+        (buyerEmail ? ("Buyer email: " + buyerEmail + "\n") : "") +
+        "\nMessage:\nHi! I’m interested in this property. Is it available for a tour this week?\n";
+
+      let copied = false;
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(details);
+          copied = true;
+        }
+      } catch (_) {
+        copied = false;
+      }
+
+      openMailModal(sellerEmail, copied);
     });
+  }
+
+  function openMailModal(email, copied) {
+    const overlay = document.getElementById("vbMailModal");
+    const copyLine = overlay.querySelector(".vb-mail-copyline");
+
+    // Update the copy line depending on whether clipboard worked
+    if (copied) {
+      copyLine.textContent = "Your message was copied to the clipboard. Paste it into the email body.";
+    } else {
+      copyLine.textContent =
+        "Couldn’t auto-copy (browser blocked clipboard). Please copy your message manually, then paste it into the email body.";
+    }
+
+    document.body.style.overflow = "hidden";
+    overlay.classList.add("is-open");
+
+    overlay.querySelector(".mail-cancel").onclick = function () {
+      overlay.classList.remove("is-open");
+      document.body.style.overflow = "";
+    };
+
+    overlay.querySelector(".mail-open").onclick = function () {
+      overlay.classList.remove("is-open");
+      document.body.style.overflow = "";
+      window.location.href = "mailto:" + email; // NO ? params
+    };
+  }
+
+  function openMailErrorModal(message) {
+    const overlay = document.getElementById("vbMailErrorModal");
+    overlay.querySelector(".vb-mail-err-text").textContent = message;
+
+    document.body.style.overflow = "hidden";
+    overlay.classList.add("is-open");
+
+    overlay.querySelector(".mail-err-close").onclick = function () {
+      overlay.classList.remove("is-open");
+      document.body.style.overflow = "";
+    };
   }
 
 })();

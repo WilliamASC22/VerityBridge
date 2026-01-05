@@ -120,22 +120,8 @@
               <div class="request-sub muted tiny">Ask a question or request a tour. No commitment required.</div>
             </div>
 
-            <form id="requestForm" class="request-form">
-              <div class="request-field">
-                <label for="fullName">Your name</label>
-                <input id="fullName" type="text" placeholder="Full name" />
-              </div>
-
-              <div class="request-field">
-                <label for="email">Email</label>
-                <input id="email" type="email" placeholder="you@example.com" />
-              </div>
-
-              <div class="request-field">
-                <label for="message">Message</label>
-                <textarea id="message" rows="4">Hi, I’m interested in this property and would like to schedule a tour. Is this available this week?</textarea>
-              </div>
-
+            <!-- ✅ keep ONLY the two buttons -->
+            <form id="requestForm" class="request-form" data-seller-email="">
               <button class="btn btn-primary full" type="submit">Contact seller</button>
               <a class="btn btn-ghost full" href="results.html">Keep browsing</a>
 
@@ -182,6 +168,38 @@
       <div class="vb-modal-actions">
         <button class="btn btn-ghost btn-sm full" type="button" id="vbCancel">Not now</button>
         <button class="btn btn-primary btn-sm full" type="button" id="vbOk">Open tour</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="vb-mail-overlay" id="vbMailModal">
+    <div class="vb-mail-modal">
+      <div class="vb-mail-head">
+        <h3>Contact seller</h3>
+        <p class="vb-mail-copyline">Your message was copied to the clipboard. Paste it into the email body.</p>
+      </div>
+
+      <div class="vb-mail-note">
+        <strong>Next step</strong><br>
+        Paste the message into the email body before sending.
+      </div>
+
+      <div class="vb-mail-actions">
+        <button class="btn btn-ghost mail-cancel">Close</button>
+        <button class="btn btn-primary mail-open">Open email</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="vb-mail-overlay" id="vbMailErrorModal">
+    <div class="vb-mail-modal">
+      <div class="vb-mail-head">
+        <h3>Can’t send yet</h3>
+        <p class="vb-mail-err-text">Seller email isn’t available for this listing yet.</p>
+      </div>
+
+      <div class="vb-mail-actions">
+        <button class="btn btn-primary mail-err-close">Close</button>
       </div>
     </div>
   </div>
