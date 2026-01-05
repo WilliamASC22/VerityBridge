@@ -490,7 +490,7 @@
     }
     else {
       // Buyer waits
-      videoBtn.textContent = "Waiting for seller";
+      videoBtn.textContent = "Video tour not yet available";
       videoBtn.href = "#";
       videoBtn.setAttribute("aria-disabled", "true");
       videoBtn.style.pointerEvents = "none";
