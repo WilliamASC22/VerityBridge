@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 
-<body data-require-auth="true">
+<body class="my-listings-page" data-require-auth="true">
   <header class="site-header topnav">
     <div class="site-header__inner nav-inner">
       <a class="logo" href="index.html">
@@ -25,7 +25,6 @@
         <a href="results.html?mode=rent" id="navRent">Rent</a>
         <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
         <a href="sell.html" id="navSell">Sell</a>
-        <!-- My listings link will be inserted after Sell by nav_auth.js when logged in -->
       </nav>
 
       <div class="header-actions nav-actions">
@@ -48,7 +47,7 @@
       </div>
     </div>
 
-    <div id="adminTools" class="card" style="display:none; padding:12px; margin-top:12px;">
+    <div id="adminTools" class="card" style="display:none; margin-top:12px; padding:12px;">
       <div class="card-title">Admin tools</div>
       <p class="muted tiny" style="margin:6px 0 10px;">
         You can optionally load all listings to moderate and delete any listing.
@@ -64,6 +63,62 @@
     </div>
 
     <div id="myListingsGrid" class="card-grid" style="margin-top:12px;"></div>
+
+    <!-- Edit tour link -->
+    <div class="vb-modal-overlay" id="vbTourModal">
+      <div class="vb-modal" role="dialog" aria-modal="true" aria-labelledby="vbTourTitle">
+        <div class="vb-modal-head">
+          <h3 class="vb-modal-title" id="vbTourTitle">Edit video tour link</h3>
+          <p class="vb-modal-sub" id="vbTourSub">
+            Paste a Google Meet or Zoom link. Buyers will see “Join video tour”.
+          </p>
+        </div>
+
+        <div class="vb-modal-body">
+          <div class="field" style="margin:0;">
+            <label for="vbTourInput">Video tour link (optional)</label>
+            <input id="vbTourInput" type="url" placeholder="https://meet.google.com/... or https://zoom.us/j/..." />
+            <div class="muted tiny" style="margin-top:6px;">
+              Leave blank to remove the tour link.
+            </div>
+          </div>
+        </div>
+
+        <div class="vb-modal-actions">
+          <button class="btn btn-ghost btn-sm full" type="button" id="vbTourCancel">Cancel</button>
+          <button class="btn btn-primary btn-sm full" type="button" id="vbTourSave">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vb-modal-overlay" id="vbDeleteModal">
+      <div class="vb-modal" role="dialog" aria-modal="true" aria-labelledby="vbDeleteTitle">
+        <div class="vb-modal-head">
+          <h3 class="vb-modal-title" id="vbDeleteTitle">Delete this listing</h3>
+          <p class="vb-modal-sub" id="vbDeleteSub">
+            This cannot be undone.
+          </p>
+        </div>
+
+        <div class="vb-modal-body">
+          <div class="vb-modal-note">
+            <div class="vb-icon">🗑️</div>
+            <div>
+              This will permanently remove the listing from VerityBridge.
+              <div class="muted tiny" style="margin-top:6px;">
+                You can always create a new listing later.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vb-modal-actions">
+          <button class="btn btn-ghost btn-sm full" type="button" id="vbDeleteCancel">Cancel</button>
+          <button class="btn btn-primary btn-sm full" type="button" id="vbDeleteOk">Delete listing</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <footer class="site-footer footer">
@@ -73,35 +128,7 @@
     </div>
   </footer>
 
-  <div class="vb-modal-overlay" id="vbDeleteModal">
-    <div class="vb-modal" role="dialog" aria-modal="true" aria-labelledby="vbDeleteTitle">
-      <div class="vb-modal-head">
-        <h3 class="vb-modal-title" id="vbDeleteTitle">Delete this listing</h3>
-        <p class="vb-modal-sub" id="vbDeleteSub">
-          This cannot be undone.
-        </p>
-      </div>
-
-      <div class="vb-modal-body">
-        <div class="vb-modal-note">
-          <div class="vb-icon">🗑️</div>
-          <div>
-            The listing will be permanently removed from VerityBridge.
-            <div class="muted tiny" style="margin-top:6px;">
-              If this is a mistake, you’ll need to re-create the listing.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="vb-modal-actions">
-        <button class="btn btn-ghost btn-sm full" type="button" id="vbDeleteCancel">Cancel</button>
-        <button class="btn btn-primary btn-sm full" type="button" id="vbDeleteOk">Delete</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Firebase (compat) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>

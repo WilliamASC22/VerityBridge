@@ -94,7 +94,7 @@
         </div>
       </div>
 
-      <!-- RIGHT COLUMN -->
+      <!-- RIGHT COLUMN (sticky) -->
       <aside class="listing-side">
         <div class="listing-side-stack">
           <!-- Map card (shows only if listing has lat/lng) -->
@@ -113,21 +113,24 @@
             </div>
           </div>
 
-          <!-- Request info card -->
-          <div class="card sticky-card request-card">
-            <div class="request-head">
-              <div class="request-title">Contact seller</div>
-              <div class="request-sub muted tiny">Ask a question or request a tour. No commitment required.</div>
-            </div>
+          <div class="card section-card request-card">
+            <h2 class="card-title">Contact seller</h2>
+            <p class="muted">
+              Ask a question or request a tour. No commitment required.
+            </p>
+            <p class="muted tiny">
+              If the seller provided a contact email, clicking <strong>Contact seller</strong>
+              will open your email app and copy a message to your clipboard.
+            </p>
 
             <form id="requestForm" class="request-form" data-seller-email="">
               <button class="btn btn-primary full" type="submit">Contact seller</button>
               <a class="btn btn-ghost full" href="results.html">Keep browsing</a>
-
-              <div class="request-foot muted tiny">
-                You won’t be spammed. Your info is only shared with the seller.
-              </div>
             </form>
+
+            <div class="request-foot muted tiny">
+              Your info is only shared with the seller.
+            </div>
           </div>
 
         </div>
@@ -148,7 +151,7 @@
       <div class="vb-modal-head">
         <h3 class="vb-modal-title" id="vbModalTitle">Start live video tour</h3>
         <p class="vb-modal-sub" id="vbModalSub">
-          This opens a secure video room in a new tab.
+          This opens a video room in a new tab.
         </p>
       </div>
 

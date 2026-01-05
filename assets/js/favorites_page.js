@@ -1,6 +1,3 @@
-// Renders the Favorites page using Favorites + Data
-// Requires login
-
 (async function () {
 
   // Must be logged in to view favorites page

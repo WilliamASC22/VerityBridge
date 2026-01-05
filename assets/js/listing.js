@@ -15,21 +15,10 @@
     var okBtn = document.getElementById("vbOk");
 
     if (!overlay || !cancelBtn || !okBtn) {
-      // fallback if modal not present
-      var msg =
-        "This will open a live video tour in a new tab.\n\n" +
-        "You may be asked to allow camera and microphone access.\n\n" +
-        "Continue";
-
-      var ok = confirm(msg);
-
+      var ok = confirm("Open video tour in a new tab?");
       if (ok) {
         onOk();
       }
-      else {
-        // do nothing
-      }
-
       return;
     }
 
@@ -158,9 +147,6 @@
     if (!safe) {
       safe = "Photo unavailable";
     }
-    else {
-      safe = safe;
-    }
 
     safe = safe.slice(0, 60);
 
@@ -182,15 +168,35 @@
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   }
 
-  function jitsiRoomForListing(id) {
-    return "veritybridge-" + String(id || "");
+  function isHttpUrl(s) {
+    var x = String(s || "").trim();
+    return (x.indexOf("https://") === 0 || x.indexOf("http://") === 0);
+  }
+
+  function getCurrentUser() {
+    try {
+      if (window.auth && window.auth.currentUser) {
+        return window.auth.currentUser;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  function isSellerForListing(listing) {
+    var u = getCurrentUser();
+    if (!u || !u.uid) {
+      return false;
+    }
+    if (!listing || !listing.ownerId) {
+      return false;
+    }
+    return String(u.uid) === String(listing.ownerId);
   }
 
   function setHero(index) {
     if (!heroPhoto) {
       return;
     }
-
     if (!photoUrls.length) {
       return;
     }
@@ -201,9 +207,6 @@
     else if (index >= photoUrls.length) {
       index = 0;
     }
-    else {
-      index = index;
-    }
 
     activeIndex = index;
     heroPhoto.src = photoUrls[activeIndex];
@@ -213,7 +216,6 @@
       for (var i = 0; i < all.length; i = i + 1) {
         all[i].classList.remove("active");
       }
-
       if (all[activeIndex]) {
         all[activeIndex].classList.add("active");
       }
@@ -226,7 +228,6 @@
     }
 
     var html = [];
-
     for (var i = 0; i < photoUrls.length; i = i + 1) {
       var src = photoUrls[i];
       html.push(
@@ -243,7 +244,6 @@
       if (!btn) {
         return;
       }
-
       var idx = Number(btn.getAttribute("data-i")) || 0;
       setHero(idx);
     });
@@ -265,7 +265,6 @@
     if (e.key === "ArrowLeft") {
       setHero(activeIndex - 1);
     }
-
     if (e.key === "ArrowRight") {
       setHero(activeIndex + 1);
     }
@@ -289,11 +288,9 @@
     if (subtitleEl) {
       subtitleEl.textContent = "Try going back to results.";
     }
-
     if (mapCard) {
       mapCard.style.display = "none";
     }
-
     return;
   }
 
@@ -343,40 +340,32 @@
     }
   }
 
-  // Overview tiles (Firestore-consistent: lotSqft)
   if (overviewGrid) {
     var lotDisplay = "—";
     if (typeof listing.lotSqft === "number" && listing.lotSqft > 0) {
       lotDisplay = formatNumber(listing.lotSqft) + " sqft";
-    }
-    else {
-      lotDisplay = "—";
     }
 
     var hoaDisplay = listing.hoa;
     if (hoaDisplay === null || hoaDisplay === undefined) {
       hoaDisplay = "—";
     }
+    else if (typeof hoaDisplay === "number") {
+      hoaDisplay = formatMoney(hoaDisplay);
+    }
     else {
-      if (typeof hoaDisplay === "number") {
-        hoaDisplay = formatMoney(hoaDisplay);
-      }
-      else {
-        hoaDisplay = String(hoaDisplay);
-      }
+      hoaDisplay = String(hoaDisplay);
     }
 
     var taxesDisplay = listing.taxes;
     if (taxesDisplay === null || taxesDisplay === undefined) {
       taxesDisplay = "—";
     }
+    else if (typeof taxesDisplay === "number") {
+      taxesDisplay = formatMoney(taxesDisplay);
+    }
     else {
-      if (typeof taxesDisplay === "number") {
-        taxesDisplay = formatMoney(taxesDisplay);
-      }
-      else {
-        taxesDisplay = String(taxesDisplay);
-      }
+      taxesDisplay = String(taxesDisplay);
     }
 
     var overviewItems = [
@@ -389,16 +378,12 @@
     ];
 
     var tiles = [];
-
     for (var k = 0; k < overviewItems.length; k = k + 1) {
       var pair = overviewItems[k];
-      var key = pair[0];
-      var val = pair[1];
-
       tiles.push(
         '<div class="info-tile">' +
-          '<div class="info-label">' + escapeHtml(key) + "</div>" +
-          '<div class="info-value">' + escapeHtml(String(val)) + "</div>" +
+          '<div class="info-label">' + escapeHtml(pair[0]) + "</div>" +
+          '<div class="info-value">' + escapeHtml(String(pair[1])) + "</div>" +
         "</div>"
       );
     }
@@ -411,75 +396,120 @@
     if (!saveBtn) {
       return;
     }
-
     if (typeof Favorites === "undefined" || !Favorites.has) {
       saveBtn.textContent = "♡ Save";
       return;
     }
-
     var on = Favorites.has(listing.id);
-
-    if (on) {
-      saveBtn.textContent = "❤️ Saved";
-    }
-    else {
-      saveBtn.textContent = "♡ Save";
-    }
+    saveBtn.textContent = on ? "❤️ Saved" : "♡ Save";
   }
 
   syncSaveBtn();
 
   if (saveBtn) {
     saveBtn.addEventListener("click", async function () {
-
       if (typeof Favorites === "undefined") {
         return;
       }
-
       if (Favorites.waitUntilReady) {
         await Favorites.waitUntilReady();
       }
-
       if (Favorites.ensureLoggedIn) {
         if (!Favorites.ensureLoggedIn()) {
           return;
         }
       }
-
       if (Favorites.toggle) {
         var res = await Favorites.toggle(listing.id);
-
         if (res && res.ok) {
           Favorites.renderFavCount();
           syncSaveBtn();
         }
       }
-
     });
   }
 
-  // Video room (nice modal)
-  if (videoBtn) {
-
-    videoBtn.href =
-      "https://meet.jit.si/" +
-      encodeURIComponent(jitsiRoomForListing(listing.id));
-
-    function openVideoTour(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      vbConfirmVideoTour(function () {
-        window.open(videoBtn.href, "_blank");
-      });
-
-      return false;
+  function applyVideoButton() {
+    if (!videoBtn) {
+      return;
     }
 
-    videoBtn.addEventListener("mousedown", openVideoTour);
-    videoBtn.addEventListener("click", openVideoTour);
-    videoBtn.addEventListener("touchstart", openVideoTour);
+    var seller = isSellerForListing(listing);
+    var tourLink = String(listing.tourLink || "").trim();
+
+    // Reset visuals
+    videoBtn.style.pointerEvents = "";
+    videoBtn.style.opacity = "";
+    videoBtn.style.cursor = "";
+    videoBtn.removeAttribute("aria-disabled");
+    videoBtn.title = "";
+
+    if (tourLink && isHttpUrl(tourLink)) {
+      // Link exists -> seller: Start, buyer: Join
+      videoBtn.textContent = seller ? "Start video tour" : "Join video tour";
+      videoBtn.href = tourLink;
+
+      function openTour(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        vbConfirmVideoTour(function () {
+          window.open(tourLink, "_blank");
+        });
+
+        return false;
+      }
+
+      videoBtn.addEventListener("mousedown", openTour);
+      videoBtn.addEventListener("click", openTour);
+      videoBtn.addEventListener("touchstart", openTour);
+      return;
+    }
+
+    // No valid link yet
+    if (seller) {
+      // Seller can still start a meeting anywhere, we open Google Meet new as a helpful default.
+      videoBtn.textContent = "Start video tour";
+      videoBtn.href = "https://meet.google.com/new";
+
+      function startTour(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        vbConfirmVideoTour(function () {
+          window.open("https://meet.google.com/new", "_blank");
+        });
+
+        return false;
+      }
+
+
+      videoBtn.addEventListener("mousedown", startTour);
+      videoBtn.addEventListener("click", startTour);
+      videoBtn.addEventListener("touchstart", startTour);
+    }
+    else {
+      // Buyer waits
+      videoBtn.textContent = "Waiting for seller";
+      videoBtn.href = "#";
+      videoBtn.setAttribute("aria-disabled", "true");
+      videoBtn.style.pointerEvents = "none";
+      videoBtn.style.opacity = "0.65";
+      videoBtn.style.cursor = "not-allowed";
+      videoBtn.title = "The seller has not added a tour link yet.";
+    }
   }
+
+  applyVideoButton();
+
+  // If auth loads after page render, update label for seller vs buyer
+  try {
+    if (window.auth && window.auth.onAuthStateChanged) {
+      window.auth.onAuthStateChanged(function () {
+        applyVideoButton();
+      });
+    }
+  } catch (_) {}
 
   // Gallery images
   photoUrls = (listing.photos || []).filter(function (x) {
@@ -540,12 +570,11 @@
     }, 80);
   }
 
-  // Request form (custom modal, no mailto query params)
   if (requestForm) {
     requestForm.addEventListener("submit", async function (e) {
       e.preventDefault();
 
-      const sellerEmail =
+      var sellerEmail =
         document.getElementById("requestForm")?.dataset?.sellerEmail?.trim() || "";
 
       if (!sellerEmail) {
@@ -553,11 +582,12 @@
         return;
       }
 
-      // Build a standard message (since we removed inputs)
+      // Add buyer email if logged in
       var buyerEmail = "";
       try {
-        if (window.auth && window.auth.currentUser && window.auth.currentUser.email) {
-          buyerEmail = String(window.auth.currentUser.email);
+        var u = getCurrentUser();
+        if (u && u.email) {
+          buyerEmail = String(u.email);
         }
       } catch (_) {
         buyerEmail = "";
@@ -565,12 +595,14 @@
 
       var details =
         "Tour request (VerityBridge)\n\n" +
-        "Listing: " + (document.title || "VerityBridge Listing") + "\n" +
-        "Address: " + String(listing.address || "") + ", " + String(listing.city || "") + ", " + String(listing.state || "") + " " + String(listing.zip || "") + "\n" +
+        "Address: " + String(listing.address || "") + ", " +
+                     String(listing.city || "") + ", " +
+                     String(listing.state || "") + " " +
+                     String(listing.zip || "") + "\n" +
         (buyerEmail ? ("Buyer email: " + buyerEmail + "\n") : "") +
         "\nMessage:\nHi! I’m interested in this property. Is it available for a tour this week?\n";
 
-      let copied = false;
+      var copied = false;
       try {
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(details);
@@ -588,7 +620,6 @@
     const overlay = document.getElementById("vbMailModal");
     const copyLine = overlay.querySelector(".vb-mail-copyline");
 
-    // Update the copy line depending on whether clipboard worked
     if (copied) {
       copyLine.textContent = "Your message was copied to the clipboard. Paste it into the email body.";
     } else {
@@ -607,7 +638,7 @@
     overlay.querySelector(".mail-open").onclick = function () {
       overlay.classList.remove("is-open");
       document.body.style.overflow = "";
-      window.location.href = "mailto:" + email; // NO ? params
+      window.location.href = "mailto:" + email;
     };
   }
 

@@ -1,8 +1,3 @@
-// - Requires login to publish
-// - Saves listing to Firestore: /listings/{listingId}
-// - Adds lat/lng by geocoding address (OpenStreetMap Nominatim)
-// - Uses Firestore-consistent fields: lotSqft, parking, hoa, taxes
-
 (function () {
 
   // Helpers
@@ -268,8 +263,12 @@
     }
   }
 
-  // Main
+  function isHttpUrl(s) {
+    var x = String(s || "").trim();
+    return (x.indexOf("https://") === 0 || x.indexOf("http://") === 0);
+  }
 
+  // Main
   var form = byId("sellForm");
   var statusEl = byId("status");
   var resultEl = byId("resultLink");
@@ -278,22 +277,9 @@
   var previewEl = byId("photoPreview");
 
   var modeEl = byId("mode");
-  var sellerEmailEl = byId("sellerEmail");
 
   if (!form) {
     return;
-  }
-
-  // Auto-fill seller email from logged-in user (if blank)
-  var a = getAuth();
-  if (a && sellerEmailEl) {
-    a.onAuthStateChanged(function (user) {
-      if (user && user.email) {
-        if (!sellerEmailEl.value || !String(sellerEmailEl.value).trim()) {
-          sellerEmailEl.value = String(user.email);
-        }
-      }
-    });
   }
 
   if (modeEl) {
@@ -338,8 +324,6 @@
     var geo = null;
     var data = null;
 
-    var sellerEmail = "";
-
     e.preventDefault();
 
     auth = getAuth();
@@ -357,22 +341,27 @@
       return;
     }
 
+    // Seller contact (required)
+    // Video tour link (optional)
+    var sellerEmail = getTextValue("sellerEmail");
+    if (!sellerEmail || sellerEmail.indexOf("@") === -1) {
+      alert("Please enter a valid seller contact email.");
+      return;
+    }
+
+    var tourLink = getTextValue("tourLink");
+    if (tourLink) {
+      if (!isHttpUrl(tourLink)) {
+        alert("Tour link must start with https:// or http:// (Google Meet or Zoom).");
+        return;
+      }
+    }
+
     listingId = randomId();
 
     listingMode = getTextValue("mode");
     if (!listingMode) {
       listingMode = "buy";
-    }
-
-    sellerEmail = getTextValue("sellerEmail");
-    if (!sellerEmail) {
-      // fallback (should usually be filled)
-      sellerEmail = String(user.email || "").trim();
-    }
-
-    if (!sellerEmail) {
-      alert("Please enter a seller email.");
-      return;
     }
 
     address = getTextValue("address");
@@ -404,9 +393,6 @@
     data = {
       id: listingId,
       ownerId: user.uid,
-
-      sellerEmail: sellerEmail,
-
       status: "active",
 
       mode: listingMode,
@@ -431,6 +417,9 @@
       parking: parking,
       hoa: hoa,
       taxes: taxes,
+
+      sellerEmail: sellerEmail,
+      tourLink: tourLink,
 
       photos: photos,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()

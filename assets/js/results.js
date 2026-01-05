@@ -14,8 +14,12 @@
   const searchInput = document.getElementById("q");
 
   const filtersCard = document.getElementById("filtersCard");
-  const applyFiltersButton = document.getElementById("apply");
-  const resetFiltersButton = document.getElementById("reset");
+  const filtersToggleBtn = document.getElementById("filtersToggle");
+  const filtersApplyBtn = document.getElementById("applyFilters");
+  const filtersResetBtn = document.getElementById("resetFilters");
+
+  const modeTabs = document.querySelectorAll("[data-mode-tab]");
+  const modeHiddenInput = document.getElementById("modeHidden");
 
   const minPriceInput = document.getElementById("minPrice");
   const maxPriceInput = document.getElementById("maxPrice");
@@ -29,193 +33,175 @@
   const emptyStateCard = document.getElementById("empty");
   const listingGrid = document.getElementById("grid");
 
+  // Video tour
+  const vbModal = document.getElementById("vbModal");
+  const vbOk = document.getElementById("vbOk");
+  const vbCancel = document.getElementById("vbCancel");
+  let pendingTourUrl = "";
+
+  function openTourModal(url) {
+    if (!vbModal || !vbOk || !vbCancel) {
+      // Fallback if modal is missing
+      window.open(url, "_blank");
+      return;
+    }
+
+    pendingTourUrl = String(url || "").trim();
+    if (!pendingTourUrl) {
+      return;
+    }
+
+    vbModal.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeTourModal() {
+    if (!vbModal) {
+      return;
+    }
+    vbModal.classList.remove("is-open");
+    document.body.style.overflow = "";
+    pendingTourUrl = "";
+  }
+
+  if (vbCancel) {
+    vbCancel.addEventListener("click", function () {
+      closeTourModal();
+    });
+  }
+
+  if (vbModal) {
+    vbModal.addEventListener("click", function (e) {
+      if (e.target === vbModal) {
+        closeTourModal();
+      }
+    });
+  }
+
+  if (vbOk) {
+    vbOk.addEventListener("click", function () {
+      const url = pendingTourUrl;
+      closeTourModal();
+      if (url) {
+        window.open(url, "_blank");
+      }
+    });
+  }
+
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeTourModal();
+    }
+  });
+
   // Map panel
   const mapPanel = document.getElementById("mapPanel");
-  const mapSubtitle = document.getElementById("mapSubtitle");
-  const closeMapButton = document.getElementById("closeMap");
+  const mapCloseBtn = document.getElementById("mapClose");
+  const mapTitleEl = document.getElementById("mapTitle");
+  const mapSubEl = document.getElementById("mapSub");
+  const mapContainer = document.getElementById("map");
 
-  // Sell/Mortgage panel (exists in results.html)
-  const modePanel = document.getElementById("modePanel");
-  const modeTitle = document.getElementById("modeTitle");
-  const modeDesc = document.getElementById("modeDesc");
-  const modeCallBtn = document.getElementById("modeCallBtn");
-
-  // URL + mode
-  const url = new URL(location.href);
-
-  let mode = url.searchParams.get("mode");
-  if (!mode) {
-    mode = "buy";
-  }
-  mode = String(mode).toLowerCase();
-
-  // If we arrived with a query in the URL (ex: landing page city chips),
-  // reflect it in the input so filtering actually applies.
-  const initialQ = url.searchParams.get("q") || "";
-  if (searchInput && initialQ) {
-    searchInput.value = String(initialQ);
+  // Load favorites count pill
+  if (typeof Favorites !== "undefined" && Favorites.renderFavCount) {
+    Favorites.renderFavCount();
   }
 
-  // ---------- helpers ----------
-  function normalizeSearchText(s) {
-    // Lowercase, remove punctuation, collapse spaces.
-    // This makes "San Jose, CA" match "San Jose CA".
-    return String(s || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
+  // Helpers
+  function parseQuery() {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("q") || "";
+    const mode = params.get("mode") || "buy";
+
+    const minPrice = params.get("minPrice") || "";
+    const maxPrice = params.get("maxPrice") || "";
+    const minBeds = params.get("minBeds") || "";
+    const type = params.get("type") || "";
+    const sort = params.get("sort") || "relevance";
+
+    return {
+      q,
+      mode,
+      minPrice,
+      maxPrice,
+      minBeds,
+      type,
+      sort,
+    };
+  }
+
+  function setQuery(newQuery) {
+    const params = new URLSearchParams();
+
+    if (newQuery.q) params.set("q", newQuery.q);
+    if (newQuery.mode) params.set("mode", newQuery.mode);
+
+    if (newQuery.minPrice) params.set("minPrice", newQuery.minPrice);
+    if (newQuery.maxPrice) params.set("maxPrice", newQuery.maxPrice);
+    if (newQuery.minBeds) params.set("minBeds", newQuery.minBeds);
+    if (newQuery.type) params.set("type", newQuery.type);
+    if (newQuery.sort) params.set("sort", newQuery.sort);
+
+    const next = "results.html" + (params.toString() ? "?" + params.toString() : "");
+    history.replaceState({}, "", next);
   }
 
   function escapeHtml(s) {
-    if (typeof App !== "undefined" && App.escape) {
-      return App.escape(s);
-    }
-    else {
-      if (s === null || s === undefined) {
-        return "";
-      }
-      else {
-        return String(s);
-      }
-    }
+    return String(s || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   function formatMoney(n) {
-    if (typeof App !== "undefined" && App.money) {
-      return App.money(n);
-    }
-    else {
-      const v = Number(n || 0);
-      return "$" + v.toLocaleString();
-    }
+    const v = Number(n || 0);
+    return "$" + v.toLocaleString();
   }
 
   function formatNumber(n) {
-    if (typeof App !== "undefined" && App.num) {
-      return App.num(n);
-    }
-    else {
-      const v2 = Number(n || 0);
-      return v2.toLocaleString();
-    }
+    const v = Number(n || 0);
+    return v.toLocaleString();
   }
 
-  function listingMode(l) {
-    let raw = "";
-    if (l && l.mode) {
-      raw = String(l.mode).toLowerCase();
-    }
-
-    if (raw === "rent") {
-      return "rent";
-    }
-    if (raw === "sell") {
-      return "sell";
-    }
-    if (raw === "mortgage") {
-      return "mortgage";
-    }
-    return "buy";
+  function normalize(s) {
+    return String(s || "").trim().toLowerCase();
   }
 
-  function matchesSearch(listing, q) {
-    const nq = normalizeSearchText(q);
-    if (!nq) {
-      return true;
-    }
+  function includesQuery(listing, q) {
+    const query = normalize(q);
+    if (!query) return true;
 
-    const hay =
-      String(listing.address || "") + " " +
-      String(listing.city || "") + " " +
-      String(listing.state || "") + " " +
-      String(listing.zip || "");
+    const hay = [
+      listing.title,
+      listing.address,
+      listing.city,
+      listing.state,
+      listing.zip,
+      listing.neighborhood,
+      listing.description,
+      listing.type,
+      listing.parking,
+      listing.mode,
+    ].map(normalize).join(" ");
 
-    return normalizeSearchText(hay).includes(nq);
+    return hay.indexOf(query) !== -1;
   }
 
-  function passesNumericFilters(listing) {
-    let minPrice = 0;
-    let maxPrice = 0;
-    let minBeds = 0;
-
-    if (minPriceInput && minPriceInput.value) {
-      minPrice = Number(minPriceInput.value) || 0;
-    }
-    if (maxPriceInput && maxPriceInput.value) {
-      maxPrice = Number(maxPriceInput.value) || 0;
-    }
-    if (minBedsSelect && minBedsSelect.value) {
-      minBeds = Number(minBedsSelect.value) || 0;
-    }
-
-    let typeVal = "";
-    if (typeSelect && typeSelect.value) {
-      typeVal = String(typeSelect.value);
-    }
-
-    const price = Number(listing.price || 0) || 0;
-    const beds = Number(listing.beds || 0) || 0;
-
-    if (minPrice && price < minPrice) {
-      return false;
-    }
-    if (maxPrice && price > maxPrice) {
-      return false;
-    }
-    if (minBeds && beds < minBeds) {
-      return false;
-    }
-
-    if (typeVal) {
-      if (String(listing.type || "") !== typeVal) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  function sortListings(list) {
-    let sortVal = "newest";
-    if (sortSelect && sortSelect.value) {
-      sortVal = String(sortSelect.value);
-    }
-
-    const copy = list.slice();
-
-    if (sortVal === "price_asc") {
-      copy.sort(function (a, b) {
-        return Number(a.price || 0) - Number(b.price || 0);
-      });
-    }
-    else if (sortVal === "price_desc") {
-      copy.sort(function (a, b) {
-        return Number(b.price || 0) - Number(a.price || 0);
-      });
-    }
-    else if (sortVal === "sqft_desc") {
-      copy.sort(function (a, b) {
-        return Number(b.sqft || 0) - Number(a.sqft || 0);
-      });
-    }
-    else {
-      // newest: keep JSON/Firestore order
-    }
-
-    return copy;
+  function jitsiRoomForListing(listingId) {
+    // legacy helper (kept for backwards compatibility)
+    const safe = String(listingId || "").replaceAll(" ", "-");
+    return "Veritybridge-" + safe;
   }
 
   function firstPhoto(listing) {
-    if (listing && listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+    if (!listing) return "";
+    if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
       if (listing.photos[0]) {
         return listing.photos[0];
       }
     }
     return "";
-  }
-
-  function jitsiRoomForListing(id) {
-    return "veritybridge-" + String(id || "");
   }
 
   function renderListingCard(listing) {
@@ -235,18 +221,37 @@
     const detailsLine =
       String(listing.beds || 0) + " bd • " +
       String(listing.baths || 0) + " ba • " +
-      formatNumber(listing.sqft) + " sqft • " +
-      escapeHtml(listing.type || "");
+      formatNumber(listing.sqft || 0) + " sqft";
 
     const listingHref = "listing.html?id=" + encodeURIComponent(listing.id);
-    const callHref = "https://meet.jit.si/" + encodeURIComponent(jitsiRoomForListing(listing.id));
+    const tourLink = String(listing.tourLink || "").trim();
+
+    const currentUser = (window.auth && window.auth.currentUser) ? window.auth.currentUser : null;
+    const myUid = currentUser ? String(currentUser.uid || "") : "";
+    const ownerId = String(listing.ownerId || "");
+    const isOwner = (myUid && ownerId && myUid === ownerId);
+
+    let tourButtonHtml = "";
+    if (tourLink) {
+      tourButtonHtml =
+        '<button class="btn btn-ghost btn-sm js-video-tour" type="button" data-tour-link="' +
+        escapeHtml(tourLink) + '">Video tour</button>';
+    }
+    else if (isOwner) {
+      tourButtonHtml =
+        '<button class="btn btn-ghost btn-sm js-start-tour" type="button">Start video tour</button>';
+    }
+    else {
+      tourButtonHtml =
+        '<button class="btn btn-ghost btn-sm" type="button" disabled>Waiting for seller</button>';
+    }
 
     const photo = firstPhoto(listing);
     let imgHtml = "";
 
     if (photo) {
       imgHtml =
-        '<img class="home-img-img" src="' + photo + '" alt="' + escapeHtml(alt) + '" loading="lazy" />';
+        '<img class="home-img-img" src="' + escapeHtml(photo) + '" alt="' + escapeHtml(alt) + '" loading="lazy" />';
     }
     else {
       imgHtml =
@@ -262,7 +267,8 @@
     }
 
     return (
-      '<article class="home-card" data-listing-card data-id="' + escapeHtml(listing.id) + '">' +
+      '<article class="home-card" data-listing-card data-id="' +
+        escapeHtml(listing.id) + '">' +
         '<a class="home-img" href="' + listingHref + '" aria-label="Open listing">' +
           imgHtml +
         "</a>" +
@@ -278,7 +284,7 @@
             escapeHtml(listing.address) + ", " + escapeHtml(listing.city) + ", " + escapeHtml(listing.state) +
           "</div>" +
           '<div class="home-actions">' +
-            '<a class="btn btn-ghost btn-sm js-video-tour" href="' + callHref + '">Video tour</a>' +
+            tourButtonHtml +
             '<a class="btn btn-primary btn-sm" href="' + listingHref + '">Details</a>' +
           "</div>" +
         "</div>" +
@@ -294,38 +300,31 @@
     if (mapPanel) {
       mapPanel.classList.add("is-hidden");
     }
-
-    const layout = document.querySelector(".results-layout");
-    if (layout) {
-      layout.classList.remove("map-open");
-    }
   }
 
-  function openMapPanel() {
-    if (mapPanel) {
-      mapPanel.classList.remove("is-hidden");
+  function openMapPanel(listing) {
+    if (!mapPanel || !mapContainer) return;
+
+    mapPanel.classList.remove("is-hidden");
+
+    if (mapTitleEl) {
+      mapTitleEl.textContent = String(listing.address || "Listing");
+    }
+    if (mapSubEl) {
+      mapSubEl.textContent = String(listing.city || "") + ", " + String(listing.state || "");
     }
 
-    const layout2 = document.querySelector(".results-layout");
-    if (layout2) {
-      layout2.classList.add("map-open");
-    }
-  }
-
-  function showListingOnMap(listing) {
-    if (!listing || !listing.lat || !listing.lng) {
-      if (mapSubtitle) {
-        mapSubtitle.textContent = "No map coordinates for this listing.";
-      }
-      return;
-    }
+    const lat = Number(listing.lat);
+    const lng = Number(listing.lng);
 
     if (!leafletMap) {
-      leafletMap = L.map("leafletMap");
+      leafletMap = L.map(mapContainer).setView([lat, lng], 13);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "© OpenStreetMap"
+        attribution: "&copy; OpenStreetMap contributors"
       }).addTo(leafletMap);
+    }
+    else {
+      leafletMap.setView([lat, lng], 13);
     }
 
     if (marker) {
@@ -333,314 +332,350 @@
       marker = null;
     }
 
-    openMapPanel();
+    marker = L.marker([lat, lng]).addTo(leafletMap);
 
-    marker = L.marker([listing.lat, listing.lng]).addTo(leafletMap);
-    marker.bindPopup(escapeHtml(listing.address || "Listing"));
-    leafletMap.setView([listing.lat, listing.lng], 12, { animate: true });
-
+    // Fix: map needs a resize after opening panel
     setTimeout(function () {
-      marker.openPopup();
-    }, 160);
+      leafletMap.invalidateSize();
+    }, 120);
+  }
 
-    if (mapSubtitle) {
-      mapSubtitle.textContent = "Previewing: " + String(listing.city || "");
+  if (mapCloseBtn) {
+    mapCloseBtn.addEventListener("click", function () {
+      closeMapPanel();
+    });
+  }
+
+  // ----- Data load -----
+  async function loadListings() {
+    // Prefer Firestore if present; otherwise fall back to local JSON
+    if (window.db) {
+      const snap = await window.db.collection("listings").get();
+      const out = [];
+
+      snap.forEach(function (doc) {
+        const d = doc.data();
+        if (d) {
+          if (!d.id) d.id = doc.id;
+          out.push(d);
+        }
+      });
+
+      return out;
+    }
+    else {
+      const res = await fetch("data/listings.json", { cache: "no-store" });
+      const json = await res.json();
+      if (json && Array.isArray(json)) {
+        return json;
+      }
+      if (json && Array.isArray(json.listings)) {
+        return json.listings;
+      }
+      return [];
     }
   }
 
-  if (closeMapButton) {
-    closeMapButton.addEventListener("click", closeMapPanel);
+  // ----- Filtering + sorting -----
+  function applyFilters(listings, query) {
+    let out = listings.slice();
+
+    // Mode
+    out = out.filter(function (l) {
+      return String(l.mode || "buy") === String(query.mode || "buy");
+    });
+
+    // Search
+    out = out.filter(function (l) {
+      return includesQuery(l, query.q);
+    });
+
+    // Min/Max price
+    const minPrice = query.minPrice ? Number(query.minPrice) : null;
+    const maxPrice = query.maxPrice ? Number(query.maxPrice) : null;
+
+    if (minPrice !== null && isFinite(minPrice)) {
+      out = out.filter(function (l) {
+        return Number(l.price || 0) >= minPrice;
+      });
+    }
+
+    if (maxPrice !== null && isFinite(maxPrice)) {
+      out = out.filter(function (l) {
+        return Number(l.price || 0) <= maxPrice;
+      });
+    }
+
+    // Min beds
+    const minBeds = query.minBeds ? Number(query.minBeds) : null;
+    if (minBeds !== null && isFinite(minBeds) && minBeds > 0) {
+      out = out.filter(function (l) {
+        return Number(l.beds || 0) >= minBeds;
+      });
+    }
+
+    // Type
+    if (query.type) {
+      out = out.filter(function (l) {
+        return String(l.type || "") === String(query.type);
+      });
+    }
+
+    // Sort
+    const sort = query.sort || "relevance";
+    if (sort === "priceLow") {
+      out.sort(function (a, b) {
+        return Number(a.price || 0) - Number(b.price || 0);
+      });
+    }
+    else if (sort === "priceHigh") {
+      out.sort(function (a, b) {
+        return Number(b.price || 0) - Number(a.price || 0);
+      });
+    }
+    else if (sort === "newest") {
+      out.sort(function (a, b) {
+        const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : Number(a.createdAt || 0);
+        const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : Number(b.createdAt || 0);
+        return tb - ta;
+      });
+    }
+    // relevance = keep order
+
+    return out;
   }
 
-  // Search submit
+  function render(listings, query) {
+    if (!listingGrid || !emptyStateCard) {
+      return;
+    }
+
+    if (headlineEl) {
+      const mode = query.mode || "buy";
+      if (mode === "rent") headlineEl.textContent = "Rent homes";
+      else if (mode === "mortgage") headlineEl.textContent = "Mortgage options";
+      else headlineEl.textContent = "Buy homes";
+    }
+
+    if (subheadEl) {
+      const count = listings.length;
+      subheadEl.textContent = count + " result" + (count === 1 ? "" : "s");
+    }
+
+    if (listings.length === 0) {
+      emptyStateCard.style.display = "block";
+      listingGrid.innerHTML = "";
+      return;
+    }
+    else {
+      emptyStateCard.style.display = "none";
+    }
+
+    const html = listings.map(function (l) {
+      return renderListingCard(l);
+    });
+
+    listingGrid.innerHTML = html.join("");
+  }
+
+  function setFormFromQuery(query) {
+    if (searchInput) searchInput.value = query.q || "";
+    if (modeHiddenInput) modeHiddenInput.value = query.mode || "buy";
+
+    if (minPriceInput) minPriceInput.value = query.minPrice || "";
+    if (maxPriceInput) maxPriceInput.value = query.maxPrice || "";
+    if (minBedsSelect) minBedsSelect.value = query.minBeds || "";
+    if (typeSelect) typeSelect.value = query.type || "";
+    if (sortSelect) sortSelect.value = query.sort || "relevance";
+
+    // Tabs
+    if (modeTabs && modeTabs.length) {
+      modeTabs.forEach(function (btn) {
+        const m = btn.getAttribute("data-mode-tab");
+        if (m === (query.mode || "buy")) {
+          btn.classList.add("is-active");
+        }
+        else {
+          btn.classList.remove("is-active");
+        }
+      });
+    }
+  }
+
+  function collectQueryFromForm(current) {
+    const out = Object.assign({}, current);
+
+    out.q = searchInput ? String(searchInput.value || "").trim() : (current.q || "");
+    out.mode = modeHiddenInput ? String(modeHiddenInput.value || "buy") : (current.mode || "buy");
+
+    out.minPrice = minPriceInput ? String(minPriceInput.value || "").trim() : "";
+    out.maxPrice = maxPriceInput ? String(maxPriceInput.value || "").trim() : "";
+    out.minBeds = minBedsSelect ? String(minBedsSelect.value || "").trim() : "";
+    out.type = typeSelect ? String(typeSelect.value || "").trim() : "";
+    out.sort = sortSelect ? String(sortSelect.value || "relevance") : "relevance";
+
+    return out;
+  }
+
+  // ----- Event handlers -----
+  if (filtersToggleBtn && filtersCard) {
+    filtersToggleBtn.addEventListener("click", function () {
+      filtersCard.classList.toggle("is-collapsed");
+    });
+  }
+
+  if (modeTabs && modeTabs.length && modeHiddenInput) {
+    modeTabs.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const mode = btn.getAttribute("data-mode-tab") || "buy";
+        modeHiddenInput.value = mode;
+
+        // Update active tab UI
+        modeTabs.forEach(function (b2) {
+          b2.classList.remove("is-active");
+        });
+        btn.classList.add("is-active");
+
+        // Apply
+        const current = parseQuery();
+        const next = collectQueryFromForm(current);
+        next.mode = mode;
+        setQuery(next);
+        run();
+      });
+    });
+  }
+
   if (searchForm) {
     searchForm.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      let q = "";
-      if (searchInput && searchInput.value) {
-        q = String(searchInput.value).trim();
-      }
-      else {
-        q = "";
-      }
-
-      const u = new URL(location.href);
-
-      if (q) {
-        u.searchParams.set("q", q);
-      }
-      else {
-        u.searchParams.delete("q");
-      }
-
-      history.replaceState({}, "", u);
-      render();
+      const current = parseQuery();
+      const next = collectQueryFromForm(current);
+      setQuery(next);
+      run();
     });
   }
 
-  // Apply / Reset
-  if (applyFiltersButton) {
-    applyFiltersButton.addEventListener("click", render);
-  }
-
-  if (resetFiltersButton) {
-    resetFiltersButton.addEventListener("click", function () {
-      if (minPriceInput) {
-        minPriceInput.value = "";
-      }
-      if (maxPriceInput) {
-        maxPriceInput.value = "";
-      }
-      if (minBedsSelect) {
-        minBedsSelect.value = "";
-      }
-      if (typeSelect) {
-        typeSelect.value = "";
-      }
-      if (sortSelect) {
-        sortSelect.value = "newest";
-      }
-      render();
+  if (filtersApplyBtn) {
+    filtersApplyBtn.addEventListener("click", function () {
+      const current = parseQuery();
+      const next = collectQueryFromForm(current);
+      setQuery(next);
+      run();
     });
   }
 
-  // Load listings once
-  const allListings = await Data.loadListings();
+  if (filtersResetBtn) {
+    filtersResetBtn.addEventListener("click", function () {
+      const current = parseQuery();
 
-  // Favorites toggle + map-on-card click
+      const next = {
+        q: current.q || "",
+        mode: current.mode || "buy",
+        minPrice: "",
+        maxPrice: "",
+        minBeds: "",
+        type: "",
+        sort: "relevance",
+      };
+
+      setFormFromQuery(next);
+      setQuery(next);
+      run();
+    });
+  }
+
+  // Card interactions: favorites, map, and video tours
   if (listingGrid) {
     listingGrid.addEventListener("click", function (e) {
-      // Video tour (open only after confirmation)
-      var videoLink = e.target.closest("a.js-video-tour");
-      if (videoLink) {
+      var startBtn = e.target.closest(".js-start-tour");
+      if (startBtn) {
         e.preventDefault();
         e.stopPropagation();
-
-        var msg =
-          "This will open a live video tour in a new tab.\n\n" +
-          "You may be asked to allow camera and microphone access.\n\n" +
-          "Continue?";
-
-        var ok = confirm(msg);
-        if (ok) {
-          window.open(videoLink.href, "_blank");
-        }
-
+        openTourModal("https://meet.google.com/new");
         return;
       }
 
-      const favButton = e.target.closest("[data-fav]");
-      if (favButton) {
+      // Video tour (custom modal)
+      var tourBtn = e.target.closest(".js-video-tour");
+      if (tourBtn) {
         e.preventDefault();
         e.stopPropagation();
 
-        const id = favButton.getAttribute("data-fav");
-
-        if (typeof Favorites !== "undefined" && Favorites.waitUntilReady) {
-          Favorites.waitUntilReady();
+        var url = "";
+        if (tourBtn.getAttribute("data-tour-link")) {
+          url = String(tourBtn.getAttribute("data-tour-link") || "").trim();
+        }
+        else if (tourBtn.href) {
+          url = String(tourBtn.href || "").trim();
         }
 
-        if (typeof Favorites !== "undefined" && Favorites.ensureLoggedIn) {
-          if (!Favorites.ensureLoggedIn()) {
-            return;
-          }
+        if (!url) {
+          return;
         }
+
+        openTourModal(url);
+        return;
+      }
+
+      const favBtn = e.target.closest("[data-fav]");
+      if (favBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const id = String(favBtn.getAttribute("data-fav") || "").trim();
+        if (!id) return;
 
         if (typeof Favorites !== "undefined" && Favorites.toggle) {
-          Favorites.toggle(id).then(function (res) {
-            if (res && res.ok) {
-              if (Favorites.has(id)) {
-                favButton.textContent = "❤️";
-              }
-              else {
-                favButton.textContent = "♡";
-              }
-
-              Favorites.renderFavCount();
-            }
-          });
+          Favorites.toggle(id);
+          Favorites.renderFavCount();
+          run(false);
         }
 
         return;
       }
 
-      // If they click a link or a button, do not open map
-      if (e.target.closest("a")) {
-        return;
-      }
-      if (e.target.closest("button")) {
-        return;
-      }
+      const card = e.target.closest("[data-listing-card]");
+      if (card && e.target.closest("a.home-img") === null && e.target.closest("a.btn") === null) {
+        // Click card body -> open map panel if listing has coords
+        const id = String(card.getAttribute("data-id") || "").trim();
+        if (!id) return;
 
-      const listingCard = e.target.closest("[data-listing-card]");
-      if (!listingCard) {
-        return;
-      }
+        // Find listing in current render (cheap search)
+        const current = window.__VB_RESULTS__ || [];
+        const listing = current.find(function (l) {
+          return String(l.id) === id;
+        });
 
-      const listingId = listingCard.getAttribute("data-id");
-
-      const listing = allListings.find(function (x) {
-        return x.id === listingId;
-      });
-
-      if (listing) {
-        showListingOnMap(listing);
+        if (listing && listing.lat && listing.lng && mapPanel) {
+          openMapPanel(listing);
+        }
       }
     });
   }
 
-  function setActiveNav() {
-    const ids = ["navBuy", "navRent", "navSell", "navMortgage"];
+  // ----- Main run -----
+  async function run(scrollToTop) {
+    if (scrollToTop === undefined) scrollToTop = true;
 
-    ids.forEach(function (id) {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.remove("active");
-      }
-    });
+    const query = parseQuery();
+    setFormFromQuery(query);
 
-    let activeId = "navBuy";
-    if (mode === "rent") {
-      activeId = "navRent";
-    }
-    else if (mode === "mortgage") {
-      activeId = "navMortgage";
-    }
-    else if (mode === "sell") {
-      activeId = "navSell";
-    }
-    else {
-      activeId = "navBuy";
-    }
+    const all = await loadListings();
+    const filtered = applyFilters(all, query);
 
-    const activeEl = document.getElementById(activeId);
-    if (activeEl) {
-      activeEl.classList.add("active");
+    // Keep for click handlers (map)
+    window.__VB_RESULTS__ = filtered;
+
+    render(filtered, query);
+
+    if (scrollToTop) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
-  function setHeadline() {
-    if (!headlineEl) {
-      return;
-    }
-
-    if (mode === "rent") {
-      headlineEl.textContent = "Homes for rent";
-    }
-    else if (mode === "sell") {
-      headlineEl.textContent = "Sell with confidence";
-    }
-    else if (mode === "mortgage") {
-      headlineEl.textContent = "Mortgage guidance";
-    }
-    else {
-      headlineEl.textContent = "Homes for sale";
-    }
-  }
-
-  function configureModePanels() {
-    if (!filtersCard || !modePanel) {
-      return;
-    }
-
-    if (mode === "buy" || mode === "rent") {
-      filtersCard.style.display = "block";
-      modePanel.style.display = "none";
-      return;
-    }
-    else {
-      filtersCard.style.display = "none";
-      modePanel.style.display = "block";
-    }
-
-    if (!modeTitle || !modeDesc || !modeCallBtn) {
-      return;
-    }
-
-    if (mode === "sell") {
-      modeTitle.textContent = "Sell with clarity";
-      modeDesc.textContent = "Post a listing and schedule real-time tours.";
-      modeCallBtn.textContent = "Create a listing";
-      modeCallBtn.href = "sell.html";
-    }
-    else if (mode === "mortgage") {
-      modeTitle.textContent = "Mortgage guidance";
-      modeDesc.textContent = "Estimate payments and compare options.";
-      modeCallBtn.textContent = "Browse homes";
-      modeCallBtn.href = "results.html?mode=buy";
-    }
-    else {
-      modeTitle.textContent = "Browse listings";
-      modeDesc.textContent = "";
-      modeCallBtn.textContent = "Browse homes";
-      modeCallBtn.href = "results.html?mode=buy";
-    }
-  }
-
-  function render() {
-    let q = "";
-    if (searchInput && searchInput.value) {
-      q = String(searchInput.value).trim();
-    }
-    else {
-      q = "";
-    }
-
-    const inMode = allListings.filter(function (l) {
-      return listingMode(l) === mode;
-    });
-
-    const filtered = inMode
-      .filter(function (l) {
-        return matchesSearch(l, q);
-      })
-      .filter(function (l) {
-        return passesNumericFilters(l);
-      });
-
-    const sorted = sortListings(filtered);
-
-    if (subheadEl) {
-      let suffix = "s";
-      if (sorted.length === 1) {
-        suffix = "";
-      }
-      else {
-        suffix = "s";
-      }
-
-      subheadEl.textContent = String(sorted.length) + " home" + suffix;
-    }
-
-    if (!sorted.length) {
-      if (emptyStateCard) {
-        emptyStateCard.style.display = "block";
-      }
-      if (listingGrid) {
-        listingGrid.innerHTML = "";
-      }
-      closeMapPanel();
-      return;
-    }
-
-    if (emptyStateCard) {
-      emptyStateCard.style.display = "none";
-    }
-    if (listingGrid) {
-      const html = [];
-      for (let i = 0; i < sorted.length; i = i + 1) {
-        html.push(renderListingCard(sorted[i]));
-      }
-      listingGrid.innerHTML = html.join("");
-    }
-  }
-
-  // Init
-  setActiveNav();
-  setHeadline();
-  configureModePanels();
-  closeMapPanel();
-  render();
+  // Start
+  run();
 
 })();
