@@ -1,6 +1,6 @@
 (async function () {
 
-  // Wait for favorites/auth to initialize
+  // Wait for favorites/auth to initialize (safe even if it resolves fast)
   if (typeof Favorites !== "undefined" && Favorites.waitUntilReady) {
     await Favorites.waitUntilReady();
   }
@@ -9,118 +9,62 @@
     Favorites.renderFavCount();
   }
 
-  // ---------- Nice modal confirm (instead of browser confirm) ----------
-  function vbConfirmVideoTour(onOk) {
-    var overlay = document.getElementById("vbModal");
-    var cancelBtn = document.getElementById("vbCancel");
-    var okBtn = document.getElementById("vbOk");
-
-    if (!overlay || !cancelBtn || !okBtn) {
-      // fallback if modal not present
-      var msg =
-        "This will open a live video tour in a new tab.\n\n" +
-        "You may be asked to allow camera and microphone access.\n\n" +
-        "Continue";
-
-      var ok = confirm(msg);
-
-      if (ok) {
-        onOk();
-      }
-      else {
-        // do nothing
-      }
-
-      return;
-    }
-
-    function closeModal() {
-      overlay.classList.remove("is-open");
-      document.body.style.overflow = "";
-    }
-
-    function openModal() {
-      overlay.classList.add("is-open");
-      document.body.style.overflow = "hidden";
-    }
-
-    function cleanup() {
-      cancelBtn.removeEventListener("click", onCancel);
-      okBtn.removeEventListener("click", onAccept);
-      overlay.removeEventListener("click", onOverlay);
-      window.removeEventListener("keydown", onKey);
-    }
-
-    function onCancel() {
-      cleanup();
-      closeModal();
-    }
-
-    function onAccept() {
-      cleanup();
-      closeModal();
-      onOk();
-    }
-
-    function onOverlay(e) {
-      if (e.target === overlay) {
-        onCancel();
-      }
-    }
-
-    function onKey(e) {
-      if (e.key === "Escape") {
-        onCancel();
-      }
-    }
-
-    cancelBtn.addEventListener("click", onCancel);
-    okBtn.addEventListener("click", onAccept);
-    overlay.addEventListener("click", onOverlay);
-    window.addEventListener("keydown", onKey);
-
-    openModal();
-  }
-
   // DOM refs
-  var searchForm = document.getElementById("resultsSearch");
-  var searchInput = document.getElementById("q");
+  const searchForm = document.getElementById("resultsSearch");
+  const searchInput = document.getElementById("q");
 
-  var filtersCard = document.getElementById("filtersCard");
-  var applyFiltersButton = document.getElementById("apply");
-  var resetFiltersButton = document.getElementById("reset");
+  const filtersCard = document.getElementById("filtersCard");
+  const applyFiltersButton = document.getElementById("apply");
+  const resetFiltersButton = document.getElementById("reset");
 
-  var minPriceInput = document.getElementById("minPrice");
-  var maxPriceInput = document.getElementById("maxPrice");
-  var minBedsSelect = document.getElementById("minBeds");
-  var typeSelect = document.getElementById("type");
-  var sortSelect = document.getElementById("sort");
+  const minPriceInput = document.getElementById("minPrice");
+  const maxPriceInput = document.getElementById("maxPrice");
+  const minBedsSelect = document.getElementById("minBeds");
+  const typeSelect = document.getElementById("type");
+  const sortSelect = document.getElementById("sort");
 
-  var headlineEl = document.getElementById("headline");
-  var subheadEl = document.getElementById("subhead");
+  const headlineEl = document.getElementById("headline");
+  const subheadEl = document.getElementById("subhead");
 
-  var emptyStateCard = document.getElementById("empty");
-  var listingGrid = document.getElementById("grid");
+  const emptyStateCard = document.getElementById("empty");
+  const listingGrid = document.getElementById("grid");
 
   // Map panel
-  var mapPanel = document.getElementById("mapPanel");
-  var mapSubtitle = document.getElementById("mapSubtitle");
-  var closeMapButton = document.getElementById("closeMap");
+  const mapPanel = document.getElementById("mapPanel");
+  const mapSubtitle = document.getElementById("mapSubtitle");
+  const closeMapButton = document.getElementById("closeMap");
 
-  // Sell/Mortgage panel
-  var modePanel = document.getElementById("modePanel");
-  var modeTitle = document.getElementById("modeTitle");
-  var modeDesc = document.getElementById("modeDesc");
-  var modeCallBtn = document.getElementById("modeCallBtn");
+  // Sell/Mortgage panel (exists in results.html)
+  const modePanel = document.getElementById("modePanel");
+  const modeTitle = document.getElementById("modeTitle");
+  const modeDesc = document.getElementById("modeDesc");
+  const modeCallBtn = document.getElementById("modeCallBtn");
 
   // URL + mode
-  var url = new URL(location.href);
+  const url = new URL(location.href);
 
-  var mode = url.searchParams.get("mode");
+  let mode = url.searchParams.get("mode");
   if (!mode) {
     mode = "buy";
   }
   mode = String(mode).toLowerCase();
+
+  // If we arrived with a query in the URL (ex: landing page city chips),
+  // reflect it in the input so filtering actually applies.
+  const initialQ = url.searchParams.get("q") || "";
+  if (searchInput && initialQ) {
+    searchInput.value = String(initialQ);
+  }
+
+  // ---------- helpers ----------
+  function normalizeSearchText(s) {
+    // Lowercase, remove punctuation, collapse spaces.
+    // This makes "San Jose, CA" match "San Jose CA".
+    return String(s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
 
   function escapeHtml(s) {
     if (typeof App !== "undefined" && App.escape) {
@@ -141,7 +85,7 @@
       return App.money(n);
     }
     else {
-      var v = Number(n || 0);
+      const v = Number(n || 0);
       return "$" + v.toLocaleString();
     }
   }
@@ -151,13 +95,13 @@
       return App.num(n);
     }
     else {
-      var v2 = Number(n || 0);
+      const v2 = Number(n || 0);
       return v2.toLocaleString();
     }
   }
 
   function listingMode(l) {
-    var raw = "";
+    let raw = "";
     if (l && l.mode) {
       raw = String(l.mode).toLowerCase();
     }
@@ -175,23 +119,24 @@
   }
 
   function matchesSearch(listing, q) {
-    if (!q) {
+    const nq = normalizeSearchText(q);
+    if (!nq) {
       return true;
     }
 
-    var hay =
+    const hay =
       String(listing.address || "") + " " +
       String(listing.city || "") + " " +
       String(listing.state || "") + " " +
       String(listing.zip || "");
 
-    return hay.toLowerCase().includes(String(q).toLowerCase());
+    return normalizeSearchText(hay).includes(nq);
   }
 
   function passesNumericFilters(listing) {
-    var minPrice = 0;
-    var maxPrice = 0;
-    var minBeds = 0;
+    let minPrice = 0;
+    let maxPrice = 0;
+    let minBeds = 0;
 
     if (minPriceInput && minPriceInput.value) {
       minPrice = Number(minPriceInput.value) || 0;
@@ -203,13 +148,13 @@
       minBeds = Number(minBedsSelect.value) || 0;
     }
 
-    var typeVal = "";
+    let typeVal = "";
     if (typeSelect && typeSelect.value) {
       typeVal = String(typeSelect.value);
     }
 
-    var price = Number(listing.price || 0) || 0;
-    var beds = Number(listing.beds || 0) || 0;
+    const price = Number(listing.price || 0) || 0;
+    const beds = Number(listing.beds || 0) || 0;
 
     if (minPrice && price < minPrice) {
       return false;
@@ -231,12 +176,12 @@
   }
 
   function sortListings(list) {
-    var sortVal = "newest";
+    let sortVal = "newest";
     if (sortSelect && sortSelect.value) {
       sortVal = String(sortSelect.value);
     }
 
-    var copy = list.slice();
+    const copy = list.slice();
 
     if (sortVal === "price_asc") {
       copy.sort(function (a, b) {
@@ -274,7 +219,7 @@
   }
 
   function renderListingCard(listing) {
-    var isFav = false;
+    let isFav = false;
 
     if (typeof Favorites !== "undefined" && Favorites.has) {
       if (Favorites.has(listing.id)) {
@@ -285,19 +230,19 @@
       }
     }
 
-    var alt = String(listing.address || "") + ", " + String(listing.city || "");
+    const alt = String(listing.address || "") + ", " + String(listing.city || "");
 
-    var detailsLine =
+    const detailsLine =
       String(listing.beds || 0) + " bd • " +
       String(listing.baths || 0) + " ba • " +
       formatNumber(listing.sqft) + " sqft • " +
       escapeHtml(listing.type || "");
 
-    var listingHref = "listing.html?id=" + encodeURIComponent(listing.id);
-    var callHref = "https://meet.jit.si/" + encodeURIComponent(jitsiRoomForListing(listing.id));
+    const listingHref = "listing.html?id=" + encodeURIComponent(listing.id);
+    const callHref = "https://meet.jit.si/" + encodeURIComponent(jitsiRoomForListing(listing.id));
 
-    var photo = firstPhoto(listing);
-    var imgHtml = "";
+    const photo = firstPhoto(listing);
+    let imgHtml = "";
 
     if (photo) {
       imgHtml =
@@ -308,7 +253,7 @@
         '<div class="home-img-img" aria-label="Photo unavailable"></div>';
     }
 
-    var heart = "♡";
+    let heart = "♡";
     if (isFav) {
       heart = "❤️";
     }
@@ -333,7 +278,7 @@
             escapeHtml(listing.address) + ", " + escapeHtml(listing.city) + ", " + escapeHtml(listing.state) +
           "</div>" +
           '<div class="home-actions">' +
-            '<a class="btn btn-ghost btn-sm videoBtn" href="' + callHref + '" rel="noreferrer">Video tour</a>' +
+            '<a class="btn btn-ghost btn-sm js-video-tour" href="' + callHref + '">Video tour</a>' +
             '<a class="btn btn-primary btn-sm" href="' + listingHref + '">Details</a>' +
           "</div>" +
         "</div>" +
@@ -341,47 +286,16 @@
     );
   }
 
-  // Same behavior as listing.js: ask before opening Jitsi
-  function attachVideoTourHandlers() {
-    var buttons = document.querySelectorAll(".videoBtn");
-
-    for (var i = 0; i < buttons.length; i = i + 1) {
-      var btn = buttons[i];
-
-      if (btn.getAttribute("data-video-bound") === "1") {
-        continue;
-      }
-      btn.setAttribute("data-video-bound", "1");
-
-      function openVideoTour(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        var link = this;
-
-        vbConfirmVideoTour(function () {
-          window.open(link.href, "_blank");
-        });
-
-        return false;
-      }
-
-      btn.addEventListener("mousedown", openVideoTour);
-      btn.addEventListener("click", openVideoTour);
-      btn.addEventListener("touchstart", openVideoTour);
-    }
-  }
-
   // ----- Map -----
-  var leafletMap = null;
-  var marker = null;
+  let leafletMap = null;
+  let marker = null;
 
   function closeMapPanel() {
     if (mapPanel) {
       mapPanel.classList.add("is-hidden");
     }
 
-    var layout = document.querySelector(".results-layout");
+    const layout = document.querySelector(".results-layout");
     if (layout) {
       layout.classList.remove("map-open");
     }
@@ -392,7 +306,7 @@
       mapPanel.classList.remove("is-hidden");
     }
 
-    var layout2 = document.querySelector(".results-layout");
+    const layout2 = document.querySelector(".results-layout");
     if (layout2) {
       layout2.classList.add("map-open");
     }
@@ -443,7 +357,7 @@
     searchForm.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      var q = "";
+      let q = "";
       if (searchInput && searchInput.value) {
         q = String(searchInput.value).trim();
       }
@@ -451,7 +365,7 @@
         q = "";
       }
 
-      var u = new URL(location.href);
+      const u = new URL(location.href);
 
       if (q) {
         u.searchParams.set("q", q);
@@ -492,20 +406,39 @@
   }
 
   // Load listings once
-  var allListings = await Data.loadListings();
+  const allListings = await Data.loadListings();
 
   // Favorites toggle + map-on-card click
   if (listingGrid) {
-    listingGrid.addEventListener("click", async function (e) {
-      var favButton = e.target.closest("[data-fav]");
+    listingGrid.addEventListener("click", function (e) {
+      // Video tour (open only after confirmation)
+      var videoLink = e.target.closest("a.js-video-tour");
+      if (videoLink) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var msg =
+          "This will open a live video tour in a new tab.\n\n" +
+          "You may be asked to allow camera and microphone access.\n\n" +
+          "Continue?";
+
+        var ok = confirm(msg);
+        if (ok) {
+          window.open(videoLink.href, "_blank");
+        }
+
+        return;
+      }
+
+      const favButton = e.target.closest("[data-fav]");
       if (favButton) {
         e.preventDefault();
         e.stopPropagation();
 
-        var id = favButton.getAttribute("data-fav");
+        const id = favButton.getAttribute("data-fav");
 
         if (typeof Favorites !== "undefined" && Favorites.waitUntilReady) {
-          await Favorites.waitUntilReady();
+          Favorites.waitUntilReady();
         }
 
         if (typeof Favorites !== "undefined" && Favorites.ensureLoggedIn) {
@@ -515,18 +448,18 @@
         }
 
         if (typeof Favorites !== "undefined" && Favorites.toggle) {
-          var res = await Favorites.toggle(id);
+          Favorites.toggle(id).then(function (res) {
+            if (res && res.ok) {
+              if (Favorites.has(id)) {
+                favButton.textContent = "❤️";
+              }
+              else {
+                favButton.textContent = "♡";
+              }
 
-          if (res && res.ok) {
-            if (Favorites.has(id)) {
-              favButton.textContent = "❤️";
+              Favorites.renderFavCount();
             }
-            else {
-              favButton.textContent = "♡";
-            }
-
-            Favorites.renderFavCount();
-          }
+          });
         }
 
         return;
@@ -540,14 +473,14 @@
         return;
       }
 
-      var listingCard = e.target.closest("[data-listing-card]");
+      const listingCard = e.target.closest("[data-listing-card]");
       if (!listingCard) {
         return;
       }
 
-      var listingId = listingCard.getAttribute("data-id");
+      const listingId = listingCard.getAttribute("data-id");
 
-      var listing = allListings.find(function (x) {
+      const listing = allListings.find(function (x) {
         return x.id === listingId;
       });
 
@@ -558,16 +491,16 @@
   }
 
   function setActiveNav() {
-    var ids = ["navBuy", "navRent", "navSell", "navMortgage"];
+    const ids = ["navBuy", "navRent", "navSell", "navMortgage"];
 
     ids.forEach(function (id) {
-      var el = document.getElementById(id);
+      const el = document.getElementById(id);
       if (el) {
         el.classList.remove("active");
       }
     });
 
-    var activeId = "navBuy";
+    let activeId = "navBuy";
     if (mode === "rent") {
       activeId = "navRent";
     }
@@ -581,7 +514,7 @@
       activeId = "navBuy";
     }
 
-    var activeEl = document.getElementById(activeId);
+    const activeEl = document.getElementById(activeId);
     if (activeEl) {
       activeEl.classList.add("active");
     }
@@ -646,7 +579,7 @@
   }
 
   function render() {
-    var q = "";
+    let q = "";
     if (searchInput && searchInput.value) {
       q = String(searchInput.value).trim();
     }
@@ -654,11 +587,11 @@
       q = "";
     }
 
-    var inMode = allListings.filter(function (l) {
+    const inMode = allListings.filter(function (l) {
       return listingMode(l) === mode;
     });
 
-    var filtered = inMode
+    const filtered = inMode
       .filter(function (l) {
         return matchesSearch(l, q);
       })
@@ -666,10 +599,10 @@
         return passesNumericFilters(l);
       });
 
-    var sorted = sortListings(filtered);
+    const sorted = sortListings(filtered);
 
     if (subheadEl) {
-      var suffix = "s";
+      let suffix = "s";
       if (sorted.length === 1) {
         suffix = "";
       }
@@ -694,15 +627,12 @@
     if (emptyStateCard) {
       emptyStateCard.style.display = "none";
     }
-
     if (listingGrid) {
-      var html = [];
-      for (var i = 0; i < sorted.length; i = i + 1) {
+      const html = [];
+      for (let i = 0; i < sorted.length; i = i + 1) {
         html.push(renderListingCard(sorted[i]));
       }
       listingGrid.innerHTML = html.join("");
-
-      attachVideoTourHandlers();
     }
   }
 

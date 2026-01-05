@@ -54,7 +54,7 @@
         </h1>
 
         <p class="hero-lede muted">
-          Tour in real time, negotiate directly, and save thousands in commissions. 
+          Tour in real time, negotiate directly, and save thousands in commissions.
           <br>
           Built for clarity, speed, and trust.
         </p>
@@ -170,7 +170,6 @@
             simple checklists, and direct communication, so you can move confidently.
           </p>
 
-          <!-- Make the pills clickable -->
           <div class="muted tiny" style="margin-top:10px;">
             Scroll down for quick guides
           </div>
@@ -196,7 +195,7 @@
       </div>
     </section>
 
-    <!-- GUIDES (targets for the pills above) -->
+    <!-- GUIDES -->
     <section class="section" id="guides">
       <div class="section-head">
         <h2 class="section-title">Guides</h2>
@@ -233,7 +232,6 @@
         </div>
       </div>
     </section>
-
 
     <!-- FINAL CTA -->
     <section class="cta">
@@ -283,13 +281,9 @@
     searchForm.addEventListener("submit", function (event) {
       event.preventDefault();
 
-      let queryText;
-
-      if (searchInput.value) {
+      let queryText = "";
+      if (searchInput && searchInput.value) {
         queryText = searchInput.value.trim();
-      }
-      else {
-        queryText = "";
       }
 
       const destination = new URL("results.html", location.href);
@@ -302,19 +296,15 @@
       location.href = destination.toString();
     });
 
+    // ✅ FIX: chips navigate directly (no requestSubmit / no “all listings” issue)
     const chips = document.querySelectorAll(".chip");
-
     chips.forEach(function (chipButton) {
       chipButton.addEventListener("click", function () {
-
-        if (chipButton.dataset.q) {
-          searchInput.value = chipButton.dataset.q;
-        }
-        else {
-          searchInput.value = "";
-        }
-
-        searchForm.requestSubmit();
+        const q = (chipButton.dataset.q || "").trim();
+        const destination = new URL("results.html", location.href);
+        destination.searchParams.set("mode", "buy");
+        if (q) destination.searchParams.set("q", q);
+        location.href = destination.toString();
       });
     });
 
@@ -334,9 +324,6 @@
           coverPhoto = listing.photos[0];
           hasCover = true;
         }
-        else {
-          hasCover = false;
-        }
 
         let imageClass = "featured-item__image pick-img";
         let imageStyle = "";
@@ -350,8 +337,7 @@
 
         html += `
           <a class="featured-item pick" href="listing.html?id=${encodeURIComponent(listing.id)}">
-            <div class="${imageClass}" style="${imageStyle}">
-            </div>
+            <div class="${imageClass}" style="${imageStyle}"></div>
             <div class="featured-item__meta pick-meta">
               <div class="featured-item__price pick-price">
                 ${App.money(listing.price)}
