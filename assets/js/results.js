@@ -9,18 +9,30 @@
     Favorites.renderFavCount();
   }
 
+  async function waitForAuthReady() {
+    if (!window.auth || typeof window.auth.onAuthStateChanged !== "function") {
+      return;
+    }
+    await new Promise((resolve) => {
+      let done = false;
+      window.auth.onAuthStateChanged(() => {
+        if (!done) {
+          done = true;
+          resolve();
+        }
+      });
+    });
+  }
+
   // DOM refs
   const searchForm = document.getElementById("resultsSearch");
   const searchInput = document.getElementById("q");
 
   const filtersCard = document.getElementById("filtersCard");
-  const filtersToggleBtn = document.getElementById("filtersToggle");
+  const filtersToggleBtn = document.getElementById("filtersToggle"); // (not in results.html, harmless)
 
-  const filtersApplyBtn = document.getElementById("apply");
-  const filtersResetBtn = document.getElementById("reset");
-
-  const modeTabs = document.querySelectorAll("[data-mode-tab]");
-  const modeHiddenInput = document.getElementById("modeHidden");
+  const filtersApplyBtn = document.getElementById("apply");  // ✅ matches results.html
+  const filtersResetBtn = document.getElementById("reset");  // ✅ matches results.html
 
   const minPriceInput = document.getElementById("minPrice");
   const maxPriceInput = document.getElementById("maxPrice");
@@ -34,7 +46,7 @@
   const emptyStateCard = document.getElementById("empty");
   const listingGrid = document.getElementById("grid");
 
-  // Video tour
+  // Video tour 
   const vbModal = document.getElementById("vbModal");
   const vbOk = document.getElementById("vbOk");
   const vbCancel = document.getElementById("vbCancel");
@@ -45,7 +57,6 @@
       window.open(url, "_blank");
       return;
     }
-
     pendingTourUrl = String(url || "").trim();
     if (!pendingTourUrl) return;
 
@@ -80,11 +91,11 @@
     if (e.key === "Escape") closeTourModal();
   });
 
-  // Map panel 
+  // Map panel
   const mapPanel = document.getElementById("mapPanel");
-  const mapCloseBtn = document.getElementById("closeMap");
-  const mapSubEl = document.getElementById("mapSubtitle");
-  const mapContainer = document.getElementById("leafletMap");
+  const mapCloseBtn = document.getElementById("closeMap");        // ✅ matches results.html
+  const mapSubEl = document.getElementById("mapSubtitle");        // ✅ matches results.html
+  const mapContainer = document.getElementById("leafletMap");     // ✅ matches results.html
 
   // Helpers
   function parseQuery() {
@@ -96,7 +107,7 @@
     const maxPrice = params.get("maxPrice") || "";
     const minBeds = params.get("minBeds") || "";
     const type = params.get("type") || "";
-    const sort = params.get("sort") || "newest"; // match HTML options
+    const sort = params.get("sort") || "newest"; // matches results.html options
 
     return { q, mode, minPrice, maxPrice, minBeds, type, sort };
   }
@@ -136,9 +147,26 @@
     return v.toLocaleString();
   }
 
-  function normalize(s) {
-    return String(s || "").trim().toLowerCase();
+  function normalize(text) {
+    // Make sure we are always working with a string
+    let result = String(text || "");
+
+    // Convert everything to lowercase
+    result = result.toLowerCase();
+
+    // Replace commas, punctuation, and symbols with spaces
+    // (so "Austin, TX" becomes "austin  tx")
+    result = result.replace(/[^a-z0-9]+/g, " ");
+
+    // Remove spaces at the beginning and end
+    result = result.trim();
+
+    // Replace multiple spaces with a single space
+    result = result.replace(/\s+/g, " ");
+
+    return result;
   }
+
 
   function includesQuery(listing, q) {
     const query = normalize(q);
@@ -167,6 +195,8 @@
     }
     return "";
   }
+
+  const WAITING_3_WORDS = "Video tour not yet available";
 
   function renderListingCard(listing) {
     let isFav = false;
@@ -199,7 +229,7 @@
         '<button class="btn btn-ghost btn-sm js-start-tour" type="button">Start video tour</button>';
     } else {
       tourButtonHtml =
-        '<button class="btn btn-ghost btn-sm" type="button" disabled>Video tour not yet available</button>';
+        '<button class="btn btn-ghost btn-sm" type="button" disabled>' + WAITING_3_WORDS + '</button>';
     }
 
     const photo = firstPhoto(listing);
@@ -329,7 +359,7 @@
       out = out.filter(function (l) { return String(l.type || "") === String(query.type); });
     }
 
-    // ✅ FIX: sort values match results.html
+    // Sort values match results.html
     const sort = query.sort || "newest";
     if (sort === "price_asc") {
       out.sort(function (a, b) { return Number(a.price || 0) - Number(b.price || 0); });
@@ -351,8 +381,16 @@
   function render(listings, query) {
     if (!listingGrid || !emptyStateCard) return;
 
-    if (headlineEl) headlineEl.textContent = "Buy homes";
-    if (subheadEl) subheadEl.textContent = listings.length + " result" + (listings.length === 1 ? "" : "s");
+    if (headlineEl) {
+      const mode = String(query.mode || "buy");
+      if (mode === "rent") headlineEl.textContent = "Rent homes";
+      else if (mode === "mortgage") headlineEl.textContent = "Mortgage";
+      else headlineEl.textContent = "Buy homes";
+    }
+
+    if (subheadEl) {
+      subheadEl.textContent = listings.length + " result" + (listings.length === 1 ? "" : "s");
+    }
 
     if (listings.length === 0) {
       emptyStateCard.style.display = "block";
@@ -367,7 +405,6 @@
 
   function setFormFromQuery(query) {
     if (searchInput) searchInput.value = query.q || "";
-    if (modeHiddenInput) modeHiddenInput.value = query.mode || "buy";
 
     if (minPriceInput) minPriceInput.value = query.minPrice || "";
     if (maxPriceInput) maxPriceInput.value = query.maxPrice || "";
@@ -380,7 +417,6 @@
     const out = Object.assign({}, current);
 
     out.q = searchInput ? String(searchInput.value || "").trim() : (current.q || "");
-    out.mode = modeHiddenInput ? String(modeHiddenInput.value || "buy") : (current.mode || "buy");
 
     out.minPrice = minPriceInput ? String(minPriceInput.value || "").trim() : "";
     out.maxPrice = maxPriceInput ? String(maxPriceInput.value || "").trim() : "";
@@ -502,6 +538,13 @@
     if (scrollToTop) window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  run();
+  await waitForAuthReady();
+  await run();
+
+  if (window.auth && typeof window.auth.onAuthStateChanged === "function") {
+    window.auth.onAuthStateChanged(function () {
+      run(false);
+    });
+  }
 
 })();
