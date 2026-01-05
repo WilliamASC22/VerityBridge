@@ -1,72 +1,5 @@
 (async function () {
 
-  // CHANGE THIS to your admin email (same one in your Firestore rules)
-  var ADMIN_EMAIL = "therealbrownwill@gmail.com";
-
-  function safeString(x) {
-    if (x === null || x === undefined) {
-      return "";
-    }
-    else {
-      return String(x);
-    }
-  }
-
-  function escapeHtml(s) {
-    if (window.App && typeof App.escape === "function") {
-      return App.escape(s);
-    }
-    else {
-      return safeString(s);
-    }
-  }
-
-  function formatMoney(n) {
-    if (window.App && typeof App.money === "function") {
-      return App.money(n);
-    }
-    else {
-      var v = Number(n || 0);
-      return "$" + v.toLocaleString();
-    }
-  }
-
-  function formatNumber(n) {
-    if (window.App && typeof App.num === "function") {
-      return App.num(n);
-    }
-    else {
-      var v = Number(n || 0);
-      return v.toLocaleString();
-    }
-  }
-
-  function firstPhoto(listing) {
-    if (!listing) {
-      return "";
-    }
-    if (!listing.photos) {
-      return "";
-    }
-    if (!Array.isArray(listing.photos)) {
-      return "";
-    }
-    if (listing.photos.length === 0) {
-      return "";
-    }
-    if (!listing.photos[0]) {
-      return "";
-    }
-    return String(listing.photos[0]);
-  }
-
-  function setText(el, text) {
-    if (!el) {
-      return;
-    }
-    el.textContent = text;
-  }
-
   async function waitForFavorites() {
     if (window.Favorites && Favorites.waitUntilReady) {
       await Favorites.waitUntilReady();
@@ -78,6 +11,69 @@
 
   await waitForFavorites();
 
+  function vbConfirmDelete(onOk) {
+    var overlay = document.getElementById("vbDeleteModal");
+    var cancelBtn = document.getElementById("vbDeleteCancel");
+    var okBtn = document.getElementById("vbDeleteOk");
+
+    // Fallback if modal HTML is missing
+    if (!overlay || !cancelBtn || !okBtn) {
+      var msg = "Delete this listing\n\nThis cannot be undone\n\nContinue";
+      var ok = confirm(msg);
+      if (ok) {
+        onOk();
+      }
+      return;
+    }
+
+    function closeModal() {
+      overlay.classList.remove("is-open");
+      document.body.style.overflow = "";
+    }
+
+    function openModal() {
+      overlay.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function cleanup() {
+      cancelBtn.removeEventListener("click", onCancel);
+      okBtn.removeEventListener("click", onAccept);
+      overlay.removeEventListener("click", onOverlay);
+      window.removeEventListener("keydown", onKey);
+    }
+
+    function onCancel() {
+      cleanup();
+      closeModal();
+    }
+
+    function onAccept() {
+      cleanup();
+      closeModal();
+      onOk();
+    }
+
+    function onOverlay(e) {
+      if (e.target === overlay) {
+        onCancel();
+      }
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    }
+
+    cancelBtn.addEventListener("click", onCancel);
+    okBtn.addEventListener("click", onAccept);
+    overlay.addEventListener("click", onOverlay);
+    window.addEventListener("keydown", onKey);
+
+    openModal();
+  }
+
   var grid = document.getElementById("myListingsGrid");
   var empty = document.getElementById("myListingsEmpty");
   var subhead = document.getElementById("myListingsSubhead");
@@ -86,6 +82,63 @@
   var loadAllBtn = document.getElementById("loadAllBtn");
   var loadMineBtn = document.getElementById("loadMineBtn");
 
+  function safeString(x) {
+    if (x === null || x === undefined) {
+      return "";
+    }
+    return String(x);
+  }
+
+  function setText(el, text) {
+    if (!el) {
+      return;
+    }
+    el.textContent = String(text || "");
+  }
+
+  function escapeHtml(s) {
+    if (window.App && typeof App.escape === "function") {
+      return App.escape(s);
+    }
+    return safeString(s);
+  }
+
+  function formatMoney(n) {
+    if (window.App && typeof App.money === "function") {
+      return App.money(n);
+    }
+    var v = Number(n || 0);
+    return v.toLocaleString(undefined, {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    });
+  }
+
+  function formatNumber(n) {
+    if (window.App && typeof App.num === "function") {
+      return App.num(n);
+    }
+    var v = Number(n || 0);
+    if (v) {
+      return v.toLocaleString();
+    }
+    return "—";
+  }
+
+  function firstPhoto(listing) {
+    if (!listing) {
+      return "";
+    }
+    if (Array.isArray(listing.photos) && listing.photos.length) {
+      return listing.photos[0] || "";
+    }
+    return "";
+  }
+
+  // -----------------------------
+  // Auth/DB check
+  // -----------------------------
   if (!window.auth || !window.db) {
     alert("Firebase is not ready. Check firebase-init.js.");
     return;
@@ -97,7 +150,9 @@
     return;
   }
 
+  var ADMIN_EMAIL = "support@veritybridge.com"; // your existing value
   var isAdmin = false;
+
   if (user.email) {
     if (String(user.email).toLowerCase() === String(ADMIN_EMAIL).toLowerCase()) {
       isAdmin = true;
@@ -114,6 +169,9 @@
     adminTools.style.display = "block";
   }
 
+  // -----------------------------
+  // Render
+  // -----------------------------
   function renderCard(listing) {
     var id = safeString(listing.id);
     var title = safeString(listing.address);
@@ -135,7 +193,6 @@
     }
 
     var factsLine = beds + " bd • " + baths + " ba • " + sqft + " sqft • " + escapeHtml(listing.type || "");
-
     var listingHref = "listing.html?id=" + encodeURIComponent(id);
 
     var deleteLabel = "Delete";
@@ -200,14 +257,7 @@
     }
 
     var count = listings.length;
-    var suffix = "s";
-    if (count === 1) {
-      suffix = "";
-    }
-    else {
-      suffix = "s";
-    }
-
+    var suffix = (count === 1) ? "" : "s";
     setText(subhead, String(count) + " listing" + suffix);
 
     if (count === 0) {
@@ -231,33 +281,28 @@
   }
 
   async function deleteListing(listingId) {
-    var msg = "Delete this listing\n\nThis cannot be undone\n\nContinue";
-    var ok = confirm(msg);
 
-    if (!ok) {
-      return;
-    }
+    vbConfirmDelete(async function () {
+      try {
+        await window.db.collection("listings").doc(listingId).delete();
+      }
+      catch (err) {
+        console.error(err);
+        alert("Delete failed. Check permissions.");
+        return;
+      }
 
-    try {
-      await window.db.collection("listings").doc(listingId).delete();
-    }
-    catch (err) {
-      console.error(err);
-      alert("Delete failed. Check permissions.");
-      return;
-    }
+      // Reload current view (keep your behavior)
+      if (isAdmin && adminTools && adminTools.style.display !== "none") {
+        var mine = await loadMine();
+        await renderList(mine);
+      }
+      else {
+        var mine2 = await loadMine();
+        await renderList(mine2);
+      }
+    });
 
-    // Reload current view
-    if (isAdmin && adminTools && adminTools.style.display !== "none") {
-      // If admin tools are visible, keep current list based on which button was last used.
-      // Simple approach: reload mine by default after delete.
-      var mine = await loadMine();
-      await renderList(mine);
-    }
-    else {
-      var mine2 = await loadMine();
-      await renderList(mine2);
-    }
   }
 
   // Click handler for deletes

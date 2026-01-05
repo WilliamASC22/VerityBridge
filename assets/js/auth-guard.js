@@ -33,7 +33,7 @@
       return;
     }
 
-    // IMPORTANT: wait for Firebase to finish loading the session
+    // wait for Firebase to finish loading the session
     auth.onAuthStateChanged(function (user) {
       if (!user) {
         goToLogin();

@@ -1,4 +1,3 @@
-// Favorites.js
 // - Stores favorites in Firestore:
 //   /users/{uid}/favorites/{listingId}
 // - Requires login to save and to view favorites page

@@ -9,7 +9,6 @@
     Favorites.renderFavCount();
   }
 
-  // ---------- Nice modal confirm (instead of browser confirm) ----------
   function vbConfirmVideoTour(onOk) {
     var overlay = document.getElementById("vbModal");
     var cancelBtn = document.getElementById("vbCancel");

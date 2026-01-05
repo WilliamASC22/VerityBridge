@@ -1,4 +1,3 @@
-// favorites_page.js
 // Renders the Favorites page using Favorites + Data
 // Requires login
 

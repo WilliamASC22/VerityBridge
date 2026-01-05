@@ -73,6 +73,34 @@
     </div>
   </footer>
 
+  <div class="vb-modal-overlay" id="vbDeleteModal">
+    <div class="vb-modal" role="dialog" aria-modal="true" aria-labelledby="vbDeleteTitle">
+      <div class="vb-modal-head">
+        <h3 class="vb-modal-title" id="vbDeleteTitle">Delete this listing</h3>
+        <p class="vb-modal-sub" id="vbDeleteSub">
+          This cannot be undone.
+        </p>
+      </div>
+
+      <div class="vb-modal-body">
+        <div class="vb-modal-note">
+          <div class="vb-icon">🗑️</div>
+          <div>
+            The listing will be permanently removed from VerityBridge.
+            <div class="muted tiny" style="margin-top:6px;">
+              If this is a mistake, you’ll need to re-create the listing.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vb-modal-actions">
+        <button class="btn btn-ghost btn-sm full" type="button" id="vbDeleteCancel">Cancel</button>
+        <button class="btn btn-primary btn-sm full" type="button" id="vbDeleteOk">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Firebase (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>

@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -263,7 +262,7 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/auth_guard.js"></script>
 
-  <!-- Firebase (compat) for GitHub Pages (no build step) -->
+  <!-- Firebase for GitHub Pages -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
@@ -296,7 +295,6 @@
       location.href = destination.toString();
     });
 
-    // ✅ FIX: chips navigate directly (no requestSubmit / no “all listings” issue)
     const chips = document.querySelectorAll(".chip");
     chips.forEach(function (chipButton) {
       chipButton.addEventListener("click", function () {

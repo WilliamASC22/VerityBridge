@@ -26,7 +26,6 @@
         <a href="results.html?mode=rent" id="navRent">Rent</a>
         <a href="results.html?mode=mortgage" id="navMortgage">Mortgage</a>
         <a href="sell.html" id="navSell" class="active">Sell</a>
-        <!-- My listings link is inserted after Sell by nav_auth.js when logged in -->
       </nav>
 
       <div class="nav-actions">
@@ -151,7 +150,7 @@
             <input id="sqft" type="number" placeholder="1780" />
           </div>
 
-          <!-- Consistent with your Firestore: lotSqft -->
+          <!-- lotSqft -->
           <div class="field">
             <label for="lotSqft">Lot size (sqft)</label>
             <input id="lotSqft" type="number" placeholder="6100" />
@@ -219,12 +218,12 @@ https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
     </section>
   </main>
 
-  <!-- Firebase (compat) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
 
-  <!-- Your Firebase init must set window.auth + window.db -->
+  <!-- Firebase init must set window.auth + window.db -->
   <script src="assets/js/firebase-init.js"></script>
 
   <!-- Shared helpers + auth -->

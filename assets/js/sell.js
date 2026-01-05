@@ -1,4 +1,3 @@
-// sell.js (beginner style)
 // - Requires login to publish
 // - Saves listing to Firestore: /listings/{listingId}
 // - Adds lat/lng by geocoding address (OpenStreetMap Nominatim)
@@ -6,9 +5,7 @@
 
 (function () {
 
-  // -----------------------------
   // Helpers
-  // -----------------------------
 
   function byId(id) {
     return document.getElementById(id);
@@ -271,9 +268,7 @@
     }
   }
 
-  // -----------------------------
   // Main
-  // -----------------------------
 
   var form = byId("sellForm");
   var statusEl = byId("status");
