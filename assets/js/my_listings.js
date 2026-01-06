@@ -247,7 +247,7 @@
         '<button class="btn btn-ghost btn-sm" type="button" style="white-space:nowrap;" ' +
         'data-edit-tour="' + escapeHtml(id) + '" ' +
         'data-current-tour="' + escapeHtml(tourLink) + '">' +
-          'Edit tour' +
+          'Edit link' +
         '</button>';
     }
 
