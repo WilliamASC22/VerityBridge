@@ -1591,3 +1591,28 @@ code {
   min-width: 140px;
   text-align: center;
 }
+
+
+
+
+.searchbar {
+  flex-wrap: wrap;              
+}
+
+.searchbar input {
+  min-width: 0;                 
+  flex: 1 1 180px;             
+}
+
+.searchbar .btn {
+  flex: 0 0 auto;              
+  white-space: nowrap;         
+}
+
+@media (max-width: 520px) {
+  .searchbar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
