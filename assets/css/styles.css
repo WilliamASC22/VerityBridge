@@ -1616,3 +1616,34 @@ code {
   }
 }
 
+
+
+
+
+
+
+/* Mobile size stuff */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img, video, iframe, svg, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.container, .page, .wrap, main, header, section {
+  max-width: 100%;
+}
+
+
+.hero, .landing-hero, .top, .top-half {
+  width: 100%;
+  max-width: 100%;
+}
