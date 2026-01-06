@@ -1726,3 +1726,40 @@ img {
     min-width: 0;
   }
 }
+
+@media (max-width: 768px) {
+  .hero-accent,
+  .hero-title .hero-accent,
+  .landing-hero .hero-accent {
+    display: inline;            
+    white-space: normal;       
+    overflow-wrap: anywhere;    
+    word-break: break-word;
+    padding: 0 .25em;           
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  .hero-title,
+  .landing-hero h1 {
+    white-space: normal;
+    max-width: 100%;
+  }
+
+  .landing-hero,
+  .hero {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .hero-chips,
+  .quick-search {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nav-pill,
+  .pill-link {
+    max-width: 100%;
+  }
+}
