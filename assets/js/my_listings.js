@@ -393,7 +393,7 @@
 
       if (newLink) {
         if (!isHttpUrl(newLink)) {
-          alert("Tour link must start with https:// or http:// (Google Meet or Zoom).");
+          alert("Tour link must start with https:// or http://");
           return;
         }
       }
