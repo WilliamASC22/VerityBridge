@@ -343,9 +343,9 @@
 
     // Seller contact (required)
     // Video tour link (optional)
-    var sellerEmail = getTextValue("sellerEmail");
+    var sellerEmail = user.email;
     if (!sellerEmail || sellerEmail.indexOf("@") === -1) {
-      alert("Please enter a valid seller contact email.");
+      alert("User email not found. Please re-login before trying again");
       return;
     }
 
